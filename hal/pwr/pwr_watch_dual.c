@@ -1,11 +1,11 @@
-#include "hal/pwr/pwr_watch.h"
+#include "hal/pwr/pwr_watch_dual.h"
 #include <stdio.h>
 
 
 // ============================== ISR ROUTINES ==============================
 void gpio_isr_pwr_monitor(uint gpio, uint32_t events, power_dual_t *config) {
     /* ADD CODE HERE WITH RIGHT STRUCT HANDLER */  
-    disable_system_power_dual(config);
+    disable_system_power(config);
     gpio_put(config->pin_led, true);   
     while(true){
         sleep_ms(1000);      
@@ -55,7 +55,7 @@ bool init_system_power(power_dual_t *config){
 
 bool enable_system_power(power_dual_t *config){
     if(!config->init_done){
-        init_system_power_dual(config);
+        init_system_power(config);
     }
     
     sleep_ms(500);
@@ -69,7 +69,7 @@ bool enable_system_power(power_dual_t *config){
         state = monitor_system_power_pgd_start(config->pin_pgd, false);
         
         if(!state) {
-            disable_system_power_dual(config);
+            disable_system_power(config);
         }
         while(!state){
             gpio_put(config->pin_led, state_led);

@@ -7,9 +7,8 @@
 /*! Initialization of WS2812B/NeoPIXEL
 * \param pio    Defined module for Programmable Input/Output (pio0 or pio1)
 * \param pin    Defined GPIO for transmitting data to LED
-* \param freq   Defined frequency at DATA PIN
 */
-void ws2812_init(PIO pio, uint pin, float freq);
+void ws2812_init(PIO pio, uint8_t pin);
 
 
 /*! Transmitting Pixel data to bus with WS2812B/NeoPIXELs

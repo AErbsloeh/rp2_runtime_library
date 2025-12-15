@@ -10,7 +10,7 @@ static uint sm_;
 static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b);
 
 
-void ws2812_init(PIO pio, uint pin, float freq) {
+void ws2812_init(PIO pio, uint pin) {
     gpio_init(pin);
     gpio_set_dir(pin, GPIO_OUT);
     gpio_put(pin, true);
@@ -25,7 +25,7 @@ void ws2812_init(PIO pio, uint pin, float freq) {
     sm_config_set_out_shift(&c, false, true, 24);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     int cycles_per_bit = ws2812_T1 + ws2812_T2 + ws2812_T3;
-    float div = clock_get_hz(clk_sys) / (freq * cycles_per_bit);
+    float div = clock_get_hz(clk_sys) / (800000 * cycles_per_bit);
     sm_config_set_clkdiv(&c, div);
     pio_sm_init(pio, sm_, offset, &c);
     pio_sm_set_enabled(pio, sm_, true);
