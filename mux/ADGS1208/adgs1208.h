@@ -21,7 +21,7 @@
 * \param init_done      Boolean if device configuration is done        
 */
 typedef struct{
-    spi_t *spi_handler;
+    spi_rp2_t *spi_handler;
     uint8_t gpio_num_csn;
     uint8_t num_device_dc;
     bool use_rstn_hw;

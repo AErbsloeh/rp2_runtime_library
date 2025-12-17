@@ -34,60 +34,60 @@ typedef struct{
     bool rts;
     bool fifo;
     bool init_done;
-} uart_t;
+} uart_rp2_t;
 
 
 /*! \brief Initializes the UART module with given configuration
- *  \param handler Pointer to uart_t containing UART settings
+ *  \param handler Pointer to uart_rp2_t containing UART settings
  *  \return true if initialization was successful, false otherwise
  */
-bool init_uart_module(uart_t *handler);
+bool init_uart_module(uart_rp2_t *handler);
 
 
 /*! \brief Configures the UART hardware based on handler settings
- *  \param handler Pointer to uart_t containing UART settings
+ *  \param handler Pointer to uart_rp2_t containing UART settings
  *  \return true if configuration was successful, false otherwise
  */
-bool configure_uart_module(uart_t *handler);
+bool configure_uart_module(uart_rp2_t *handler);
 
 
 /*! \brief Sends raw binary data over UART
- *  \param handler   Pointer to configured uart_t
+ *  \param handler   Pointer to configured uart_rp2_t
  *  \param buffer_tx Pointer to buffer containing data to transmit
  *  \param len_tx    Number of bytes to transmit
  */
-void construct_uart_write_data(uart_t *handler, uint8_t buffer_tx[], size_t len_tx);
+void construct_uart_write_data(uart_rp2_t *handler, uint8_t buffer_tx[], size_t len_tx);
 
 
 /*! \brief Sends a null-terminated string over UART
- *  \param handler Pointer to configured uart_t
+ *  \param handler Pointer to configured uart_rp2_t
  *  \param s       Null-terminated string to transmit
  */
-void construct_uart_write_string(uart_t *handler, const char *s);
+void construct_uart_write_string(uart_rp2_t *handler, const char *s);
 
 
 /*! \brief Reads binary data from UART into buffer
- *  \param handler   Pointer to configured uart_t
+ *  \param handler   Pointer to configured uart_rp2_t
  *  \param buffer_rx Pointer to buffer to store received data
  *  \param len_rx    Number of bytes to read from UART
  */
-void construct_uart_read_data(uart_t *handler, uint8_t buffer_rx[], size_t len_rx);
+void construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx);
 
 
 /*! \brief Checks if UART RX buffer has data to read
- *  \param handler      Pointer to configured uart_t
+ *  \param handler      Pointer to configured uart_rp2_t
  *  \return             true if data is available to read, false otherwise
  */
-bool is_readable(uart_t *handler);
+bool is_readable(uart_rp2_t *handler);
 
 
 /*! \brief Function for reading string from UART module
- *  \param handler      Pointer to configured uart_t
+ *  \param handler      Pointer to configured uart_rp2_t
  *  \param buffer_rx    Pointer to buffer to store received string
  *  \param len_rx       Maximum length of the string to read
  *  \return             true if data is available to read, false otherwise
  */
-void construct_uart_read_string(uart_t *handler, char buffer_rx[], size_t len_rx);
+void construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx);
 
 
 #endif

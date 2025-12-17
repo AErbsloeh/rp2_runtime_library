@@ -9,9 +9,9 @@
 static FATFS fs;
 
 // ==================================== SD CARD INSTANCE =============================================
-static spi_t sd_spi = {
+static spi_rp2_t sd_spi = {
     .miso_gpio = PICO_DEFAULT_SPI_RX_PIN,
-    .mosi_gpio = PICO_DEFAULT_SPI_TX_PIN,
+    .mosi_gpio = PICO_DEFAULT_spi_rp2_tX_PIN,
     .sck_gpio = PICO_DEFAULT_SPI_SCK_PIN,
     .baud_rate = 1 * 1000 * 1000, // 1 MHz
     .spi_mode = 0,
@@ -33,7 +33,7 @@ static sd_card_t sd_card = {
 
 
 // ==================================== CALLABLE FUNCS ==============================================
-bool sd_spi_init(sd_spi_t *handler){
+bool sd_spi_init(sd_spi_rp2_t *handler){
     uint baudrate_originial = handler->spi->fspi_khz * 1000;
 
     sd_spi.hw_inst = handler->spi->spi_mod;

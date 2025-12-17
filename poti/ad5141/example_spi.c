@@ -6,7 +6,7 @@
 
 
 int main(){ 
-    ad5141_spi_t setting_device = {
+    ad5141_spi_rp2_t setting_device = {
         .spi_handler = &DEVICE_SPI_DEFAULT,
         .device_csn = PICO_DEFAULT_SPI_CSN_PIN,
         .init_done

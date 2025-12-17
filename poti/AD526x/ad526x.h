@@ -16,7 +16,7 @@
 * \param init_done      Boolean if device configuration is done        
 */
 typedef struct{
-    spi_t *spi_handler;
+    spi_rp2_t *spi_handler;
     uint8_t gpio_cs;
     bool device_mode;
     bool shutdown;

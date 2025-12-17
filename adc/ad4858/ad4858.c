@@ -26,7 +26,7 @@ static const uint16_t SOFTSPAN_REG_ADDR[8] = {
 
 // ======================================== INTERNAL READ/WRITE COMMANDS ===============================================
 
-uint8_t handler_pico_spi_transmission(ad4858_t *settings, bool rnw, uint16_t adr, uint8_t data){
+uint8_t handler_pico_spi_rp2_transmission(ad4858_t *settings, bool rnw, uint16_t adr, uint8_t data){
     uint8_t buffer_tx[3] = {0x00};
     uint8_t buffer_rx[3] = {0x00};
     buffer_tx[0] = ((rnw) ? 0x80 : 0x00) | ((adr & 0x7F00) >> 0x08);
@@ -40,9 +40,9 @@ uint8_t handler_pico_spi_transmission(ad4858_t *settings, bool rnw, uint16_t adr
 //read-modify-write
 //mask says what to modify
 void ad4858_handler_pico_spi_rmw(ad4858_t *settings, uint16_t adr, uint8_t data, uint8_t mask){
-    uint8_t reg_data = handler_pico_spi_transmission(settings, true, adr, 0x00);    //Read
+    uint8_t reg_data = handler_pico_spi_rp2_transmission(settings, true, adr, 0x00);    //Read
     uint8_t mod = (mask & data) | (~mask & reg_data);                               //Modify
-    handler_pico_spi_transmission(settings, false, adr, mod);                       //Write
+    handler_pico_spi_rp2_transmission(settings, false, adr, mod);                       //Write
 }
 
 void ad4858_handler_spi_send_sw_reset(ad4858_t *settings){
@@ -60,21 +60,21 @@ void ad4858_handler_spi_set_streaming_instruction_mode(ad4858_t *settings, bool 
 }
 
 uint16_t ad4858_handler_spi_get_prod_id(ad4858_t *settings){
-    uint8_t prod_h = handler_pico_spi_transmission(settings, true, PRODUCT_ID_H, 0x00);
-    uint8_t prod_l = handler_pico_spi_transmission(settings, true, PRODUCT_ID_L, 0x00);
+    uint8_t prod_h = handler_pico_spi_rp2_transmission(settings, true, PRODUCT_ID_H, 0x00);
+    uint8_t prod_l = handler_pico_spi_rp2_transmission(settings, true, PRODUCT_ID_L, 0x00);
     return (prod_h << 8) | prod_l;
 }
 
 //write some data and see if the same data comes back
-bool ad4858_handler_spi_test_com(ad4858_t *settings){
+bool ad4858_handler_spi_rp2_test_com(ad4858_t *settings){
     uint8_t tst_val = 0x55;
-    handler_pico_spi_transmission(settings, false, SCRATCH_VALUE, tst_val);
-    uint8_t reg_data = handler_pico_spi_transmission(settings, true, SCRATCH_VALUE, 0x00);
+    handler_pico_spi_rp2_transmission(settings, false, SCRATCH_VALUE, tst_val);
+    uint8_t reg_data = handler_pico_spi_rp2_transmission(settings, true, SCRATCH_VALUE, 0x00);
     return reg_data == tst_val;
 }
 
 uint8_t ad4858_handler_spi_get_device_status(ad4858_t *settings){
-    return handler_pico_spi_transmission(settings, true, DEVICE_STATUS, 0x00);
+    return handler_pico_spi_rp2_transmission(settings, true, DEVICE_STATUS, 0x00);
 }
 
 void ad4858_handler_spi_set_packet_size(ad4858_t *settings, uint16_t packet_size){
@@ -200,7 +200,7 @@ bool ad4858_handler_pico_cmos_crc_check(ad4858_t *settings, uint8_t const messag
 };
 
 void ad4858_start_conv(ad4858_t* settings){
-    //uint8_t reg_data = handler_pico_spi_transmission(settings, true, 0x20, 0x00); 
+    //uint8_t reg_data = handler_pico_spi_rp2_transmission(settings, true, 0x20, 0x00); 
     //printf("Data: %x\n", reg_data);
     gpio_put(settings->gpio_convert, true);
     //sleep_us(1);

@@ -13,15 +13,15 @@
 */
 typedef struct {
     
-    spi_t *spi;                 // Pointer to SPI interface
+    spi_rp2_t *spi;                 // Pointer to SPI interface
     uint8_t gpio_cs;            // Chip Select GPIO pin
     bool card_available;        // Card available flag    
     bool init_done;             // Initialization flag
-} sd_spi_t;
+} sd_spi_rp2_t;
 
 
 
-bool sd_spi_init(sd_spi_t *config);
+bool sd_spi_init(sd_spi_rp2_t *config);
 
 
 

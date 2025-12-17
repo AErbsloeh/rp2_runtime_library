@@ -4,7 +4,7 @@
 
 
 // =========================== INTERNAL FUNCTIONS ===========================
-int8_t ad57x4_spi_transmission(ad57x4_t *config, bool rnw, uint8_t reg, uint8_t adr, uint16_t data) {
+int8_t ad57x4_spi_rp2_transmission(ad57x4_t *config, bool rnw, uint8_t reg, uint8_t adr, uint16_t data) {
     uint8_t buffer_tx[3];
     buffer_tx[0] = ((rnw) ? 0x80 : 0x00) | ((reg & 0x07) << 3) | ((adr & 0x07) << 0);
     buffer_tx[1] = ((data & 0xFF00) >> 8);
@@ -48,15 +48,15 @@ bool ad57x4_init(ad57x4_t *config){
     // Writing to the "Power control register"
     uint16_t data = 0x0000 | config->en_pwr_chnnl;
     printf("Data Power Control: %d\n", data);
-    ad57x4_spi_transmission(config, false, AD57x4_REG_PWR, 0x00, data);
+    ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_PWR, 0x00, data);
     
     // Writing to the "Control register"
     data = ((config->spi_sdo_disable) ? 0x0001 : 0x0000);
-    ad57x4_spi_transmission(config, false, AD57x4_REG_CNTRL, 0x01, data);
+    ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_CNTRL, 0x01, data);
 
     // Writing to the "Output range select register"
     data = 0x0000 | config->range_mode;
-    ad57x4_spi_transmission(config, false, AD57x4_REG_RANGE, AD57x4_ADR_DAC_ALL, data);
+    ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_RANGE, AD57x4_ADR_DAC_ALL, data);
 
     config->init_done = true;
     return config->init_done;
@@ -72,7 +72,7 @@ bool ad57x4_reset(ad57x4_t *config){
             sleep_us(10);
         }
     } else {
-        ad57x4_spi_transmission(config, false, AD57x4_REG_CNTRL, 0x04, 0x0000);
+        ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_CNTRL, 0x04, 0x0000);
     };    
 }
 
@@ -85,5 +85,5 @@ int8_t ad57x4_update_data(ad57x4_t *config, uint8_t chnnl, uint16_t data){
         case 12:    data0 = ((data & 0x0FFF) << 4);  break;
         default:    data0 = ((data & 0xFFFF) << 0);  break;
     }
-    return ad57x4_spi_transmission(config, false, AD57x4_REG_DATA, chnnl, data0);
+    return ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_DATA, chnnl, data0);
 }

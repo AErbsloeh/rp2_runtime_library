@@ -80,7 +80,7 @@
     \param init_done    Flag to indicate if initialization was successful
 */
 typedef struct {
-    spi_t *spi;
+    spi_rp2_t *spi;
     uint8_t pga_gain;
     uint8_t channel_select;
     bool test_mode;

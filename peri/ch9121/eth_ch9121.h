@@ -6,7 +6,7 @@
 
 
 typedef struct {
-    uart_t* uart_handler;
+    uart_rp2_t* uart_handler;
     bool init_done;
 } eth_ch9121_t;
 

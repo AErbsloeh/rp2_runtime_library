@@ -5,7 +5,7 @@
 
 
 int main(){ 
-    ad5141_i2c_t setting_device = {
+    ad5141_i2c_rp2_t setting_device = {
         .i2c_handler = &DEVICE_I2C_DEFAULT,
         .adr = 0x00,
         .init_done

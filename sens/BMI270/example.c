@@ -5,14 +5,14 @@
 
 
 int main(){ 
-    static i2c_t I2C_USED = {
+    static i2c_rp2_t I2C_USED = {
         .pin_sda = 14,
         .pin_scl = 15,
         .i2c_mod = i2c1,
         .fi2c_khz = 400,
         .init_done = false
     };
-    static bmi270_i2c_t sens_device = {
+    static bmi270_i2c_rp2_t sens_device = {
         .i2c_mod = &I2C_USED,
         .en_adv_pwr_mode = false,
         .en_temp_sensor = true,

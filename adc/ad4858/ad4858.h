@@ -86,7 +86,7 @@ uint16_t ad4858_handler_spi_get_prod_id(ad4858_t *settings);
  *  \param settings   Pointer to AD4858 device settings
  *  \return           true if communication succeeded (read value matches written value), false otherwise
  */
-bool ad4858_handler_spi_test_com(ad4858_t *settings);
+bool ad4858_handler_spi_rp2_test_com(ad4858_t *settings);
 
 /*! \brief Read the device status register
  *  \param settings   Pointer to AD4858 device settings

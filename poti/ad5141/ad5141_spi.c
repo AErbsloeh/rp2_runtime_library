@@ -4,13 +4,13 @@
 #include "hardware/gpio.h"
 
 
-void ad5141_spi_reset_handler_params(ad5141_spi_t *gpio_csn)
+void ad5141_spi_reset_handler_params(ad5141_spi_rp2_t *gpio_csn)
 {
     gpio_csn->init_done = false;
 }
 
 
-bool ad5141_spi_reset_software(ad5141_spi_t *gpio_csn)
+bool ad5141_spi_reset_software(ad5141_spi_rp2_t *gpio_csn)
 {
     if(!gpio_csn->spi_handler->init_done){
         configure_spi_module(gpio_csn->spi_handler, false);
@@ -26,7 +26,7 @@ bool ad5141_spi_reset_software(ad5141_spi_t *gpio_csn)
 }
 
 
-bool ad5141_spi_control_shutdown(ad5141_spi_t *gpio_csn, bool enable_rdac0, bool enable_rdac1)
+bool ad5141_spi_control_shutdown(ad5141_spi_rp2_t *gpio_csn, bool enable_rdac0, bool enable_rdac1)
 {
     if(!gpio_csn->spi_handler->init_done){
         configure_spi_module(gpio_csn->spi_handler, false);
@@ -50,7 +50,7 @@ bool ad5141_spi_control_shutdown(ad5141_spi_t *gpio_csn, bool enable_rdac0, bool
 }
 
 
-bool ad5141_spi_init(ad5141_spi_t *gpio_csn)
+bool ad5141_spi_init(ad5141_spi_rp2_t *gpio_csn)
 {
     if(!gpio_csn->spi_handler->init_done){
         configure_spi_module(gpio_csn->spi_handler, false);
@@ -69,7 +69,7 @@ bool ad5141_spi_init(ad5141_spi_t *gpio_csn)
 }
 
 
-bool ad5141_spi_define_level(ad5141_spi_t *gpio_csn, uint8_t rdac_sel, uint8_t pot_position){
+bool ad5141_spi_define_level(ad5141_spi_rp2_t *gpio_csn, uint8_t rdac_sel, uint8_t pot_position){
     if(gpio_csn->init_done){
         uint8_t  buffer[2] = {0};
         buffer[0] = 0x10 | (rdac_sel & 0x0F);

@@ -1,7 +1,7 @@
 #include "hal/uart/uart.h"
 
 
-bool configure_uart_module(uart_t *handler){
+bool configure_uart_module(uart_rp2_t *handler){
     uart_init(handler->uart_id, handler->baudrate);
     gpio_set_function(handler->pin_tx, GPIO_FUNC_UART);
     gpio_set_function(handler->pin_rx, GPIO_FUNC_UART);
@@ -15,17 +15,17 @@ bool configure_uart_module(uart_t *handler){
 }
 
 
-void construct_uart_write_data(uart_t *handler, uint8_t buffer_tx[], size_t len_tx){
+void construct_uart_write_data(uart_rp2_t *handler, uint8_t buffer_tx[], size_t len_tx){
     uart_write_blocking(handler->uart_id, buffer_tx, len_tx);
 };
 
 
-void construct_uart_write_string(uart_t *handler, const char *s){
+void construct_uart_write_string(uart_rp2_t *handler, const char *s){
     uart_puts(handler->uart_id, s);
 };
 
 
-void construct_uart_read_data(uart_t *handler, uint8_t buffer_rx[], size_t len_rx){
+void construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx){
     uint8_t i = 0;
     while (is_readable(handler) && i < len_rx)
     {
@@ -36,7 +36,7 @@ void construct_uart_read_data(uart_t *handler, uint8_t buffer_rx[], size_t len_r
 };
 
 
-void construct_uart_read_string(uart_t *handler, char buffer_rx[], size_t len_rx){
+void construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx){
     uint8_t i = 0;
     while (is_readable(handler) && i < len_rx)
     {
@@ -48,6 +48,6 @@ void construct_uart_read_string(uart_t *handler, char buffer_rx[], size_t len_rx
 };
 
 
-bool is_readable(uart_t *handler){
+bool is_readable(uart_rp2_t *handler){
     return uart_is_readable(handler->uart_id);
 };

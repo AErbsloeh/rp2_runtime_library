@@ -18,7 +18,7 @@
 
 
 // ======================================== INTERNAL READ/WRITE COMMANDS ===============================================
-int8_t handler_pico_spi_transmission(ltc2668_t *cnf, uint8_t cmd, uint8_t adr, uint16_t data){
+int8_t handler_pico_spi_rp2_transmission(ltc2668_t *cnf, uint8_t cmd, uint8_t adr, uint16_t data){
     uint8_t buffer_tx[3] = {0x00};
     buffer_tx[0] = ((cmd & 0x0F) << 0x04) | ((adr & 0x0F) << 0x00);
     buffer_tx[1] = ((data & 0xFF00) >> 0x08);
@@ -56,36 +56,36 @@ bool ltc2668_init(ltc2668_t *cnf){
     }
 
     // --- Bringing whole device into power down mode
-    //handler_pico_spi_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
+    //handler_pico_spi_rp2_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
     sleep_ms(10);
 
     // --- Controlling the reference device
     if(cnf->use_int_vref){
-        handler_pico_spi_transmission(cnf, CMD_CONFIG, 0x00, 0x0000);
+        handler_pico_spi_rp2_transmission(cnf, CMD_CONFIG, 0x00, 0x0000);
     } else {
-        handler_pico_spi_transmission(cnf, CMD_CONFIG, 0x00, 0x0001);
+        handler_pico_spi_rp2_transmission(cnf, CMD_CONFIG, 0x00, 0x0001);
     };
     sleep_ms(10);
     
     // --- Power-Up device
     if(cnf->pwr_up_chnnl == 0xFFFF){
-        handler_pico_spi_transmission(cnf, CMD_UPD_DAC_ALL, 0x00, 0x0000);
+        handler_pico_spi_rp2_transmission(cnf, CMD_UPD_DAC_ALL, 0x00, 0x0000);
         sleep_us(100);
     } else if (cnf->pwr_up_chnnl == 0x0000){
-        handler_pico_spi_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
+        handler_pico_spi_rp2_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
         sleep_us(100);
     } else {
         for(uint8_t idx = 0; idx < 16; idx++){
             bool activate_chnnl = (0x0001 << idx) & cnf->pwr_up_chnnl;
             if(activate_chnnl){
-                handler_pico_spi_transmission(cnf, CMD_UPD_DAC_N, idx, 0x0000);
+                handler_pico_spi_rp2_transmission(cnf, CMD_UPD_DAC_N, idx, 0x0000);
                 sleep_us(10);
             };
         };
     };    
     // --- Setting Span Code for all DAC channel
     for(uint8_t chnl=0; chnl < 16; chnl++){
-        handler_pico_spi_transmission(cnf, CMD_WR_SPAN_DAC_N, chnl, cnf->vref_range & 0x0007);
+        handler_pico_spi_rp2_transmission(cnf, CMD_WR_SPAN_DAC_N, chnl, cnf->vref_range & 0x0007);
         sleep_us(10);
     }  
 
@@ -99,19 +99,19 @@ bool ltc2668_init(ltc2668_t *cnf){
 
 
 void ltc2668_pwr_dwn_device(ltc2668_t *cnf){
-	handler_pico_spi_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
+	handler_pico_spi_rp2_transmission(cnf, CMD_PWR_DWN_ALL, 0x00, 0x0000);
 }
 
 
 void ltc2668_update_vrange(ltc2668_t *cnf, uint8_t chnl, uint8_t vref_mode){
-    handler_pico_spi_transmission(cnf, CMD_WR_SPAN_DAC_N, chnl, vref_mode);
+    handler_pico_spi_rp2_transmission(cnf, CMD_WR_SPAN_DAC_N, chnl, vref_mode);
     sleep_us(10);
 }
 
 
 void ltc2668_clear_data_soft(ltc2668_t *cnf){
     for(uint8_t chnl=0; chnl < 16; chnl++){
-        handler_pico_spi_transmission(cnf, CMD_WR_CODE_DAC_N, chnl, 0x8000);
+        handler_pico_spi_rp2_transmission(cnf, CMD_WR_CODE_DAC_N, chnl, 0x8000);
         sleep_us(5);
     };        
 }
@@ -135,27 +135,27 @@ void ltc2668_clear_data(ltc2668_t *cnf){
 
 void ltc2668_mux_control(ltc2668_t *cnf, bool enable, uint8_t chnnl){
     uint16_t mux_data = (enable) ? (0x0010 | chnnl & 0x000F) : 0x0000;
-    handler_pico_spi_transmission(cnf, CMD_MUX_CONTROL, 0x00, mux_data);
+    handler_pico_spi_rp2_transmission(cnf, CMD_MUX_CONTROL, 0x00, mux_data);
 }
 
 
 void ltc2668_write_output_all_channel(ltc2668_t *cnf, uint16_t data){
-    handler_pico_spi_transmission(cnf, CMD_WR_CODE_DAC_ALL, 0x00, data);
+    handler_pico_spi_rp2_transmission(cnf, CMD_WR_CODE_DAC_ALL, 0x00, data);
 }
 
 
 void ltc2668_write_output_single_channel(ltc2668_t *cnf, uint16_t data, uint8_t chnnl){
-    handler_pico_spi_transmission(cnf, CMD_WR_CODE_DAC_N, chnnl & 0x0F, data);
+    handler_pico_spi_rp2_transmission(cnf, CMD_WR_CODE_DAC_N, chnnl & 0x0F, data);
 }
 
 
 void ltc2668_update_output_all_channel(ltc2668_t *cnf, uint16_t data){
     uint16_t data_real = (cnf->use_16bit_dev) ? data : (data & 0x0FFF) << 4;
-    handler_pico_spi_transmission(cnf, CMD_WR_UPD_DAC_ALL, 0x00, data_real);
+    handler_pico_spi_rp2_transmission(cnf, CMD_WR_UPD_DAC_ALL, 0x00, data_real);
 }
 
 
 void ltc2668_update_output_single_channel(ltc2668_t *cnf, uint16_t data, uint8_t chnnl){
     uint16_t data_real = (cnf->use_16bit_dev) ? data : (data & 0x0FFF) << 4;
-    handler_pico_spi_transmission(cnf, CMD_WR_UPD_DAC_N, chnnl & 0x0F, data_real);
+    handler_pico_spi_rp2_transmission(cnf, CMD_WR_UPD_DAC_N, chnnl & 0x0F, data_real);
 }

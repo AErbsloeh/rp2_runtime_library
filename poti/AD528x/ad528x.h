@@ -22,7 +22,7 @@
 * \param init_done      Boolean if device configuration is done        
 */
 typedef struct{
-    i2c_t *i2c_handler;
+    i2c_rp2_t *i2c_handler;
     uint8_t mode_sel;
     bool shutdown;
     uint8_t gpio_state;

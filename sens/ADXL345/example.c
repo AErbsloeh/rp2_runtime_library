@@ -5,7 +5,7 @@
 
 
 int main(){ 
-    adxl345_i2c_t setting_device = {
+    adxl345_i2c_rp2_t setting_device = {
         .i2c_mod = &DEVICE_I2C_DEFAULT,
         .offset_x = 0.0,
 		.offset_y = 0.0,

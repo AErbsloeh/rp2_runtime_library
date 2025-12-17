@@ -17,7 +17,7 @@ typedef struct{
     uint8_t length;
     uint8_t position;
     char* data[];
-} usb_t;
+} usb_rp2_t;
 
 
 // ========================= FUNCTIONS FOR PROCESSING ===========================
@@ -36,7 +36,7 @@ bool usb_wait_until_connected(void);
 /*! \brief Function for handling the FIFO buffer
 * \param fifo_buffer    Struct handler for handling FIFO buffer   
 */
-void usb_handling_fifo_buffer(usb_t* fifo_buffer);
+void usb_handling_fifo_buffer(usb_rp2_t* fifo_buffer);
 
 
 /*! \brief Function for converting char data for sending out

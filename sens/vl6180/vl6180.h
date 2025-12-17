@@ -21,7 +21,7 @@
 
 // Handler for configuring and controlling the device configuration
 typedef struct {
-    i2c_t *i2c_mod;
+    i2c_rp2_t *i2c_mod;
     uint8_t max_convergence_ms;
     bool    init_done;
 } vl6180_t;
