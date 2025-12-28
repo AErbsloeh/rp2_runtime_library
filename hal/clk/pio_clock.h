@@ -54,7 +54,7 @@ static inline pio_sm_config blink_program_get_default_config(uint offset) {
     \param pin          GPIO number for CLK generation
     \param freq         Frequency value of generated CLK signal in Hz
 */
-void clk_generation_pio_init(PIO pio, uint pin, uint freq_hz){
+static inline void clk_generation_pio_init(PIO pio, uint pin, uint freq_hz){
     uint sm = 0;
     uint offset = pio_add_program(pio, &blink_program);
 
