@@ -12,7 +12,7 @@ bool usb_init(void){
 
 bool usb_wait_until_connected(void){
     while (!stdio_usb_connected()){
-        sleep_ms(1);
+        sleep_ms(500);
     };
     return true;
 }

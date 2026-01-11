@@ -1,5 +1,6 @@
 message(STATUS "peri_sd available at: ${CMAKE_BINARY_DIR}/_deps/pico_sd-src/src")
 add_library(peri_sd INTERFACE)
+
 # --- Fetch external libs from GitHub ---
 if(PICO_SD_ENABLED)
     include(FetchContent)
