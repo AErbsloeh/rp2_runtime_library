@@ -7,13 +7,19 @@
 #endif
 
 // ======================================== INTERNAL FUNCTIONS ===============================================
-uint8_t pin_used = 0;
+uint8_t pin_used = 25;	// Default pin of board LED (Pico / Pico 2)
 bool led_state = false;
 
 
 // ======================================== CALLABLE FUNCTIONS ===============================================
 void set_gpio_default_led(uint8_t led_pin){
-	pin_used = led_pin;
+	#ifdef LED_CYW43_SUPPORTED
+		pin_used = CYW43_WL_GPIO_LED_PIN;
+	#elif LED_WS2812_SUPPORTED
+		pin_used = 17;
+	#else
+		pin_used = led_pin;
+	#endif
 };
 
 
@@ -28,10 +34,10 @@ void init_default_led(void){
 		if (cyw43_arch_init()) {
             return false;
         }
-		pin_used = CYW43_WL_GPIO_LED_PIN;
+		set_gpio_default_led(255);
 		cyw43_arch_gpio_put(pin_used, led_state);
 	#elif LED_WS2812_SUPPORTED
-		pin_used = 17;
+		set_gpio_default_led(255);
 		PIO  pio = pio0;
 		ws2812_init(pio, pin_used);
 		put_pixel_rgb(0, 0, 0); 		
