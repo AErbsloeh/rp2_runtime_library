@@ -19,11 +19,14 @@ bool usb_wait_until_connected(void){
 
 
 void usb_handling_fifo_buffer(usb_rp2_t* fifo_buffer){
-    int character = getchar_timeout_us(0);
-    if (character == PICO_ERROR_TIMEOUT) return;
-	
+    int charac = getchar_timeout_us(0);
+    if (charac == PICO_ERROR_TIMEOUT){
+        fifo_buffer->ready = false;
+        return;
+    }
+
 	char* buffer = *fifo_buffer->data;
-    buffer[fifo_buffer->position] = (char)character;
+    buffer[fifo_buffer->position] = (char)charac;
 
     // Control lines
     if(fifo_buffer->position == 0) {
