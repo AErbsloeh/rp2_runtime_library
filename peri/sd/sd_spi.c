@@ -32,6 +32,7 @@ static sd_card_t sd_card = {
 // =================================== LOCAL FUNCS AND VARS =========================================
 static FATFS fs;
 static FIL fil;
+static FILINFO fin;
 static FRESULT fr;
 static UINT bw;
 
@@ -73,15 +74,12 @@ bool sd_init(sd_t *config){
     if(!config->spi->init_done){
         configure_spi_module(config->spi, false);
     }
-    printf("SD Status: %d\n", sd_card.state.m_Status);
     config->init_done = sd_init_driver();
     if(config->init_done){
         config->card_available = true; //sd_card.state.card_type != SDCARD_NONE && sd_card.state.card_type != CARD_UNKNOWN;
     } else {
         config->card_available = false;
     }
-    printf("SD Card Type: %d\n", sd_card.state.card_type);
-    printf("SD Status: %d\n", sd_card.state.m_Status);
 
     sd_spi.baud_rate = baudrate_originial;
     return config->init_done;
@@ -113,13 +111,19 @@ bool sd_mount(sd_t *config){
 }
 
 
-bool sd_create_file(sd_t *config, const char *filename){
+bool sd_file_exists(sd_t *config, char *filename){
+    FILINFO fno;
+    FRESULT res = f_stat(filename, &fno);
+    return (res == FR_OK);
+}
+
+
+bool sd_create_file(sd_t *config, char *filename){
     if(!config->mount_done){
         return false;
     } else {
-        fr = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
+        fr = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
         if(fr == FR_OK){
-            f_close(&fil);
             return true;
         } else {
             return false;
@@ -127,13 +131,12 @@ bool sd_create_file(sd_t *config, const char *filename){
     }
 }
 
-bool sd_open_file(sd_t *config, const char *filename){
+bool sd_open_file(sd_t *config, char *filename){
     if(!config->mount_done){
         return false;
     } else {
-        fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
-        if(fr == FR_OK && fr == FR_EXIST){
-            f_close(&fil);
+        fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE | FA_READ);
+        if(fr == FR_OK){
             return true;
         } else {
             return false;
@@ -142,28 +145,41 @@ bool sd_open_file(sd_t *config, const char *filename){
 }
 
 
-bool sd_write_content(sd_t *config, const char *content){
+bool sd_write_content(sd_t *config, char *content){
     if(!config->mount_done){
         return false;
     } else {
-        int num = f_printf(&fil, content);
+        int num = f_printf(&fil, "%s", content);
+        f_sync(&fil);
         return num > 0;
     }
 }
 
 
-bool sd_read_content(sd_t *config, char *buffer, size_t buf_size){
-    if(!config->mount_done){
+bool sd_read_complete(sd_t *config, char *buffer, size_t buf_size){
+    if(!config->mount_done || buffer == NULL || buf_size == 0){
         return false;
     } else {
         UINT br;
+        f_lseek(&fil, 0);
         fr = f_read(&fil, buffer, buf_size-1, &br);
-        if(fr == FR_OK){
-            buffer[br] = '\0'; // Null-terminate the string
+        if(fr == FR_OK || br == 0){
+            buffer[br] = '\0';
             return true;
         } else {
+            buffer[0] = '\0';
             return false;
         }
+    }
+}
+
+
+bool sd_read_line(sd_t *config, char *buffer, size_t buf_size, size_t bytes_offset){
+    if(!config->mount_done || buffer == NULL || buf_size == 0){
+        return false;
+    } else {
+        f_lseek(&fil, bytes_offset);
+        return (bool)f_gets(buffer, buf_size, &fil);
     }
 }
 

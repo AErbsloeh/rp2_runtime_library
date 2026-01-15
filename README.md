@@ -39,8 +39,8 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 
 ## Peripherie Devices
 - [x] Ethernet Module CH9121
-- [ ] SD card support (WIP)
-- [ ] Ethernet module W5500
+- [x] SD card support
+- [ ] Ethernet module W5500 (WIP)
 
 
 ## Sensor Libraries
