@@ -15,7 +15,6 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] Power handling for external devices (with/without feedback)
 - [x] Timer interrupt
 - [x] LED control
-- [ ] Interrupt handler
 - [x] Pulse Width Modulaton
 - [x] Timer
 - [ ] Bluetooth Stack
@@ -26,7 +25,7 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 ## Device Libraries
 - [x] ADC ADS8881
 - [x] ADC AD7779
-- [ ] ADC AD4858
+- [ ] ADC AD4858 
 - [x] DAC AD57x4
 - [x] DAC AD5765
 - [x] DAC LTC2668
