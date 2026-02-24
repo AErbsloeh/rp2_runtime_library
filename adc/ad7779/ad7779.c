@@ -1,4 +1,4 @@
-#include "sens/ad7779.h"
+#include "adc/ad7779/ad7779.h"
 
 
 // ======================================== INTERNAL READ/WRITE FUNCTIONS ===============================================
