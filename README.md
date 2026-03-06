@@ -41,10 +41,10 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] SD card support
 - [ ] Ethernet module W5500 (WIP)
 
-
 ## Sensor Libraries
 - [x] Environmeont Sensor: SHT21
 - [x] Accelerator: ADXL345
 - [x] Accelerator and Gyroscope: BMI270
 - [x] Light: VEML7700
 - [x] Distance Estimuation: VL6180x
+- [x] Current Measuring Unit: PAC193X
