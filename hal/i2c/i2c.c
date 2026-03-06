@@ -77,7 +77,7 @@ bool check_i2c_bus_for_device_total(i2c_rp2_t *handler){
 
 
 bool construct_i2c_write_data(i2c_rp2_t *i2c_handler, uint8_t adr, uint8_t buffer_tx[], size_t len_tx){
-    uint8_t feedback = i2c_write_blocking(i2c_handler->i2c_mod, adr, buffer_tx, len_tx, false);
+    int8_t feedback = i2c_write_blocking(i2c_handler->i2c_mod, adr, buffer_tx, len_tx, false);
     sleep_us(10);
     return feedback != PICO_ERROR_GENERIC;
 }
@@ -86,7 +86,7 @@ bool construct_i2c_write_data(i2c_rp2_t *i2c_handler, uint8_t adr, uint8_t buffe
 bool construct_i2c_read_data(i2c_rp2_t *i2c_handler, uint8_t adr, uint8_t buffer_tx[], size_t len_tx, uint8_t buffer_rx[], size_t len_rx){
     i2c_write_blocking(i2c_handler->i2c_mod, adr, buffer_tx, len_tx, true);
     sleep_us(10);
-    uint8_t feedback = i2c_read_blocking(i2c_handler->i2c_mod, adr, buffer_rx, len_rx, false);
+    int8_t feedback = i2c_read_blocking(i2c_handler->i2c_mod, adr, buffer_rx, len_rx, false);
     sleep_us(10);
     return feedback != PICO_ERROR_GENERIC;
 }
