@@ -26,14 +26,16 @@ int main(){
         .i2c = &i2c0_inst,
         .gpio_pwrdwn = 255,
         .gpio_alert = 255,
-        .adr = 0x11,
-        .num_channels = 4,
+        .adr = 0,
+        .num_channels = 0,
         .sample_rate = 3,
         .enable_channels = true,
         .enable_sleep_mode = false,
         .enable_single_shot_mode = false,
         .init_done = false
     };
+    pac193x_config.adr = pac193x_get_i2c_address(499);
+
     set_state_default_led(true);
     if(pac193x_init(&pac193x_config)){
         printf("Init PAC193x sensor done\n");

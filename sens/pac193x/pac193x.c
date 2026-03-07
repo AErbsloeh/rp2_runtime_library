@@ -38,6 +38,28 @@ bool pac193x_send_refresh(pac193x_t *config){
 
 
 // ======================= CALLABLE FUNCS =======================
+uint8_t pac193x_get_i2c_address(uint32_t resistor_value){
+    switch(resistor_value){
+        case 0:         return 0x10;    //GND
+        case 499:       return 0x11;
+        case 806:       return 0x12;
+        case 1270:      return 0x13;
+        case 2050:      return 0x14;
+        case 3240:      return 0x15;
+        case 5230:      return 0x16;
+        case 8450:      return 0x17;
+        case 13300:     return 0x18;
+        case 21500:     return 0x19;
+        case 34000:     return 0x1A;
+        case 54900:     return 0x1B;
+        case 88700:     return 0x1C;
+        case 140000:    return 0x1D;
+        case 226000:    return 0x1E;
+        default:        return 0x1F;    //VDD
+    }
+}
+
+
 bool pac193x_check_product_id(pac193x_t *config){
     uint8_t data_tx[1] = {0x00};
     data_tx[0] = PAC193X_REG_PID;
@@ -75,6 +97,22 @@ bool pac193x_check_revision_id(pac193x_t *config){
         return data_rx[0] == 0x03;
     }
     return false;
+}
+
+
+uint8_t pac193x_get_number_of_channels(pac193x_t *config){
+    uint8_t data_tx[1] = {0x00};
+    data_tx[0] = PAC193X_REG_PID;
+
+    uint8_t data_rx[1] = {0x00};
+    if(pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, sizeof(data_rx))){
+        if(data_rx[0] == 0x58)       return 1;
+        else if(data_rx[0] == 0x59)  return 2;
+        else if(data_rx[0] == 0x5A)  return 3;
+        else if(data_rx[0] == 0x5B)  return 4;
+        else return 0;
+    }
+    return 0;
 }
 
 
@@ -162,14 +200,22 @@ bool pac193x_init(pac193x_t *config){
     if(!config->i2c->init_done){
         init_i2c_module(config->i2c);
     }
+
+    if(config->adr < PAC193X_I2C_ADDR_START || config->adr > PAC193X_I2C_ADDR_END){
+        config->adr = pac193x_get_i2c_address(0);
+    }
     if(!check_i2c_bus_for_device_specific(config->i2c, config->adr)){
         config->init_done = false; 
         return false;
     }
-    config->init_done = pac193x_check_product_id(config) && pac193x_check_manufacturer_id(config) && pac193x_check_revision_id(config);
+    if(config->num_channels == 0){
+        config->num_channels = pac193x_get_number_of_channels(config);
+    }
+    config->init_done = pac193x_check_product_id(config) && pac193x_check_manufacturer_id(config);
     if(!config->init_done) {
         return false;
     }
+
     // Send to control register (all params will be set)
     pac193x_polarity_current(config, config->enable_bipolar_current);
     pac193x_polarity_current(config, config->enable_bipolar_voltage);
@@ -186,8 +232,10 @@ bool pac193x_update_data_register(pac193x_t *config){
 
 
 uint16_t pac193x_read_voltage(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
-        return 0;
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
+        return 0;    
 
     uint8_t data_tx[1] = {0x00};
     data_tx[0] = PAC193X_REG_VBUS + channel;
@@ -201,7 +249,9 @@ uint16_t pac193x_read_voltage(pac193x_t *config, uint8_t channel){
 
 
 uint16_t pac193x_read_voltage_rolling(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
         return 0;
 
     uint8_t data_tx[1] = {0x00};
@@ -216,7 +266,9 @@ uint16_t pac193x_read_voltage_rolling(pac193x_t *config, uint8_t channel){
 
 
 uint16_t pac193x_read_current(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
         return 0;
 
     uint8_t data_tx[1] = {0x00};
@@ -231,7 +283,9 @@ uint16_t pac193x_read_current(pac193x_t *config, uint8_t channel){
 
 
 uint16_t pac193x_read_current_rolling(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
         return 0;
 
     uint8_t data_tx[1] = {0x00};
@@ -246,7 +300,9 @@ uint16_t pac193x_read_current_rolling(pac193x_t *config, uint8_t channel){
 
 
 uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
         return 0;
 
     uint8_t data_tx[1] = {0x00};
@@ -261,7 +317,9 @@ uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel){
 
 
 uint64_t pac193x_read_power_accumulated(pac193x_t *config, uint8_t channel){
-    if(channel > 3) 
+    if(config->num_channels == 0)
+        config->num_channels = pac193x_get_number_of_channels(config);
+    if(channel > config->num_channels - 1) 
         return 0;
 
     uint8_t data_tx[1] = {0x00};

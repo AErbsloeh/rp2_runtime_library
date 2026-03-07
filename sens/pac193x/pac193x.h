@@ -7,6 +7,7 @@
 
 // More details in datasheet (Table 5-1, p.26)
 #define PAC193X_I2C_ADDR_START 0x10
+#define PAC193X_I2C_ADDR_END   0x1F
 
 #define PAC193X_RATE_1024SPS    0
 #define PAC193X_RATE_256SPS     1
@@ -20,7 +21,7 @@
 * \param gpio_pwrdwn            Power Down GPIO pin (not used = 255)
 * \param gpio_alert             Alert GPIO pin (not used = 255)
 * \param adr                    I2C address of the sensor
-* \param num_channels           Number of channels to read (1-4)
+* \param num_channels           Number of channels to read (0: auto-detect, 1-4: selected)
 * \param sample_rate            Integer for definign sampling rate (0=1024, 1=256, 2=64, 3=8 SPS)
 * \param enable_channels        Flag for enabling channels (if false, all channels will be disabled, otherwise all channels will be enabled)
 * \param enable_sleep_mode      Flag for enabling sleep mode (if true, the sensor will go to sleep mode after each measurement, otherwise it will stay in continuous measurement mode)
@@ -44,6 +45,12 @@ typedef struct {
     bool init_done;
 } pac193x_t;
 
+/*! \brief Function for getting the I2C address of the PAC193x sensor module (More details in datasheet [Table 5-1, p.26])
+* \param resistor_value Value of the resistor connected to the ADR pin (0=GND, ..., 65535 = VDD)
+* \return uint8_t with the I2C address (0x10 - 0x1F)
+*/
+uint8_t pac193x_get_i2c_address(uint32_t resistor_value);
+
 
 /*! \brief Function for checking the product ID of the PAC193x sensor module
 * \param config Pointer to the configuration struct
@@ -64,6 +71,12 @@ bool pac193x_check_manufacturer_id(pac193x_t *config);
 * \return true if revision ID is correct (=0x03), false otherwise
 */
 bool pac193x_check_revision_id(pac193x_t *config);
+
+/*! \brief Function for getting the number of active channels of the PAC193x sensor module
+* \param config             Pointer to the configuration struct
+* \return uint8_t with number of channels (1-4)
+*/
+uint8_t pac193x_get_number_of_channels(pac193x_t *config);
 
 
 /*! \brief Function for defiing the single shot mode of the PAC193x sensor module
@@ -131,7 +144,7 @@ bool pac193x_update_data_register(pac193x_t *config);
 /*! \brief Reading the actual voltage sample at selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return int16_t with voltage reading with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
+* \return uint16_t with voltage reading with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
 */
 uint16_t pac193x_read_voltage(pac193x_t *config, uint8_t channel);
 
@@ -139,7 +152,7 @@ uint16_t pac193x_read_voltage(pac193x_t *config, uint8_t channel);
 /*! \brief Reading the voltage sample (mean of rolling 8) at selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return int16_t with voltage read-out with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
+* \return uint16_t with voltage read-out with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
 */
 uint16_t pac193x_read_voltage_rolling(pac193x_t *config, uint8_t channel);
 
@@ -147,7 +160,7 @@ uint16_t pac193x_read_voltage_rolling(pac193x_t *config, uint8_t channel);
 /*! \brief Reading the actual current flow sample of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return int16_t with voltage read-out with scaling factor of 1.53 µA/LSB (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
+* \return uint16_t with voltage read-out with scaling factor of 1.53 µV/(LSB * R_sh) (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
 */
 uint16_t pac193x_read_current(pac193x_t *config, uint8_t channel);
 
@@ -155,7 +168,7 @@ uint16_t pac193x_read_current(pac193x_t *config, uint8_t channel);
 /*! \brief Reading the current flow (mean of rolling 8) of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return int16_t with voltage read-out with scaling factor of 1.53 µA/LSB (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
+* \return uint16_t with voltage read-out with scaling factor of 1.53 µV/(LSB * R_sh) (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
 */
 uint16_t pac193x_read_current_rolling(pac193x_t *config, uint8_t channel);
 
@@ -163,7 +176,7 @@ uint16_t pac193x_read_current_rolling(pac193x_t *config, uint8_t channel);
 /*! \brief Reading the actual power sample of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return int32_t with power read-out (need scaling)
+* \return uint32_t with digital value from power read-out (need scaling)
 */
 uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel);
 
@@ -171,14 +184,14 @@ uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel);
 /*! \brief Reading the actual power consumption (accumulated) of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return uint48_t with running/ accumulate power consumption (need scaling and divison with numbers)
+* \return uint48_t with running/ accumulate digital value from power measurement (need scaling and divison with numbers)
 */
 uint64_t pac193x_read_power_accumulated(pac193x_t *config, uint8_t channel);
 
 
 /*! \brief Reading the accumulation number from conversion using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
-* \return uint24_t with number of accumulation numbers
+* \return uint24_t with number of accumulation numbers between two refresh requests
 */
 uint32_t pac193x_read_accumulation_number(pac193x_t *config);
 
