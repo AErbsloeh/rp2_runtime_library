@@ -8,6 +8,7 @@ static int rp2_dma_channel = 0;
 static dma_channel_config rp2_dma_cfg;
 
 // --- Data buffer
+#define ADC_CLK         48000000.0f
 #define ADC_BUFFER_SIZE 1024
 size_t buffer_idx = 0;
 
@@ -65,7 +66,7 @@ bool rp2_adc_init_dma(rp2_adc_t* config){
         false   // no shift (getting 12-bit data)
     );
 
-    adc_set_clkdiv(0); // maximale Geschwindigkeit
+    adc_set_clkdiv(ADC_CLK / (float)config->sampling_rate);
 
     // DMA Setup
     rp2_dma_channel = dma_claim_unused_channel(true);
