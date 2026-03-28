@@ -11,16 +11,19 @@
 #define RP2_ADC_CH3     0x03
 #define RP2_ADC_TEMP    0x04
 
+//TODO: Differenciate between low sampling rate (< 1kHz, polling) and high frequency (else, with FIFO/DMA)
 
 /*! \brief RP2 ADC structure
     \param adc_channel      ADC Channel to be used
     \param sampling_rate    uint32_t value with sampling rate
     \param use_dma          Boolean for using DMA controller in streaming application 
+    \param buffersize       size_t with buffer size of the used ADC data buffer
     \param init_done        Initialization done flag
 */
 typedef struct {
     uint8_t     adc_channel;
     uint32_t    sampling_rate;
+    size_t      buffersize;
     bool        use_dma;
     bool        init_done;  
 } rp2_adc_t;
@@ -70,9 +73,15 @@ bool rp2_adc_read_buffer_polling(rp2_adc_t* config);
 
 
 /*! \brief Getting the new buffer content
-    \return             uint16_t array with data
+    \return             uint16_t array with ADC data
 */
-uint16_t* rp2_adc_get_buffer(void);
+volatile uint16_t* rp2_adc_get_buffer(rp2_adc_t* config);
+
+
+/*! \brief Getting the size of each ADC data buffer
+    \return size_t with buffersize
+*/
+size_t rp2_adc_get_buffersize(void);
 
 
 #endif
