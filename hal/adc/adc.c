@@ -18,10 +18,17 @@ volatile bool use_buffer_a = true;
 volatile bool buffer_a_rdy = false;
 volatile bool buffer_b_rdy = false;
 
+
+uint64_t get_timestamp(void){
+    absolute_time_t now = get_absolute_time();
+    return to_us_since_boot(now);
+}
+
+
 // --- IRQ handler
 void rp2_adc_dma_handler(void){
     dma_hw->ints0 = 1u << rp2_dma_channel;
-    timestamp = get_runtime_ms();
+    timestamp = get_timestamp();
 
     if (use_buffer_a) {
         buffer_a_rdy = true;
@@ -178,7 +185,7 @@ bool rp2_adc_read_buffer_polling(rp2_adc_t* config){
         return false;
     
     buffer_a[buffer_idx] = adc_read();
-    timestamp = get_runtime_ms();
+    timestamp = get_timestamp();
 
     if(buffer_idx == config->buffersize-1){
         buffer_a_rdy = true;
