@@ -54,17 +54,17 @@ bool daq_is_fifo_full(daq_data_t* data){
 
 
 bool daq_check_send_data(daq_data_t* data){
-    if(daq_sample_data.send_batch){
-        if(daq_is_fifo_full(&daq_sample_data)){
-            daq_sample_data.iteration ++;
-            daq_send_data_usb(&daq_sample_data, daq_sample_data.data->length);
+    if(data->send_batch){
+        if(daq_is_fifo_full(data)){
+            data->iteration ++;
+            daq_send_data_usb(data, data->data->length);
             return true;
         };    
     } else {
-        if(daq_sample_data.new_data){
-            daq_sample_data.new_data = false;  
-            daq_sample_data.iteration ++;
-            daq_send_data_usb(&daq_sample_data, 2);
+        if(data->new_data){
+            data->new_data = false;  
+            data->iteration ++;
+            daq_send_data_usb(data, 2);
             return true;
         };
     }
