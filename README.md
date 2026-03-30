@@ -6,6 +6,8 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 Further examples can be found in this [repo](https://github.com/analogdevicesinc/no-OS/tree/main).
 
 ## Hardware Abstraction Layer (hal)
+- [x] FIFO sampling buffer (without DMA)
+- [ ] FIFO sampling buffer (with DMA)
 - [x] RP2-ADC interface
 - [x] SPI interface
 - [x] I2C interface
@@ -40,7 +42,7 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] Ethernet Module CH9121
 - [x] SD card support
 - [ ] Ethernet module W5500 (WIP)
-- [ ] FPGA Handler + Flashing (SPI 1x, no bus alignment) for AMD, Lattice and CologneChip Gatemate FPGAs (WIP)
+- [ ] FPGA Handler + Flashing (SPI 1x, no bus alignment) for AMD, Lattice and CologneChip FPGAs (WIP)
 - [ ] Adafruit OLED Display 4400
 
 ## Sensor Libraries
