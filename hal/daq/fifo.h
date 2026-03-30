@@ -3,20 +3,16 @@
 
 
 #include "pico/stdlib.h"
-#include "pico/time.h"
 #include "pico/util/queue.h"
+
 
 /*! @brief Structure representing a FIFO buffer
     @param queue         Queue structure from pico-sdk for implementing the FIFO buffer
-    @param timestamp     Absolute time of the last push or pop operation (for runtime measurement)
-    @param channel_num   Number of the channel for which the FIFO is used (for multi-channel applications)
-    @param element_size  Size of each element in bytes
+    @param element_size  Size of each element in the FIFO buffer
     @param length        Maximum number of elements in the FIFO
  */
 typedef struct {
     queue_t queue;
-    uint64_t timestamp;
-    uint8_t channel_num;
     size_t element_size;
     size_t length;
 } fifo_t;

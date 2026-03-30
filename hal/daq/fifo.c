@@ -1,9 +1,4 @@
 #include "hal/daq/fifo.h"
-#include "hardware/dma.h"
-
-
-// ==================== INTERNAL FUNCS ====================//
-volatile absolute_time_t time;
 
 
 // ==================== CALLABLE FUNCS ====================//
@@ -14,15 +9,11 @@ bool fifo_init(fifo_t *f) {
 
 
 bool fifo_push(fifo_t *f, void *data){
-    time = get_absolute_time();
-    f->timestamp = to_us_since_boot(time);
     return queue_try_add(&f->queue, data);
 }
 
 
 void fifo_push_blocking(fifo_t *f, void *data){
-    time = get_absolute_time();
-    f->timestamp = to_us_since_boot(time);
     queue_add_blocking(&f->queue, data);
 }
 
