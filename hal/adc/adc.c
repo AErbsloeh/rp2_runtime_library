@@ -2,6 +2,7 @@
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 
 // ======================= INTERNAL VARIABLES AND FUNCS ========================
@@ -110,9 +111,10 @@ bool rp2_adc_init(rp2_adc_t* config){
 
     adc_init();
     rp2_adc_change_channel(config, config->adc_channel);
-
-    buffer_a = malloc(config->buffersize * sizeof(uint16_t));
-    buffer_b = malloc(config->buffersize * sizeof(uint16_t));
+    
+    if(config->buffersize > 1)
+        buffer_a = malloc(config->buffersize * sizeof(uint16_t));
+        buffer_b = malloc(config->buffersize * sizeof(uint16_t));
 
     if(config->use_dma){
         return rp2_adc_init_dma(config);
@@ -124,16 +126,13 @@ bool rp2_adc_init(rp2_adc_t* config){
 
 
 bool rp2_adc_change_channel(rp2_adc_t* config, uint8_t new_channel){
-    if(!config->init_done)
-        return false;
-
     if(new_channel == RP2_ADC_TEMP)
         adc_set_temp_sensor_enabled(true); 
     else
         adc_set_temp_sensor_enabled(false); 
         adc_gpio_init(get_gpio_rp2_adc_channel(new_channel));
-    adc_select_input(new_channel);
     
+    adc_select_input(new_channel);
     config->adc_channel = new_channel;
     return true;
 }
@@ -141,7 +140,7 @@ bool rp2_adc_change_channel(rp2_adc_t* config, uint8_t new_channel){
 
 uint16_t rp2_adc_read_raw(rp2_adc_t* config){
     if(!config->init_done)
-        return 0;
+        return 65535;
 
     return adc_read();
 }

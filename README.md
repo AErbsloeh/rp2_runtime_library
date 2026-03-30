@@ -8,6 +8,7 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 ## Hardware Abstraction Layer (hal)
 - [x] FIFO sampling buffer (without DMA)
 - [ ] FIFO sampling buffer (with DMA)
+- [x] DAQ interface with example
 - [x] RP2-ADC interface
 - [x] SPI interface
 - [x] I2C interface
