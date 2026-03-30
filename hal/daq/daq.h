@@ -81,6 +81,13 @@ bool daq_pop_data_from_fifo(daq_data_t* data, void* data_out);
 bool daq_is_fifo_full(daq_data_t* data);
 
 
+/*! \brief Function to check if the DAQ data is ready to be sent
+* \param data           Pointer to the DAQ data structure
+* \return               true if data is ready to be sent, false otherwise
+*/
+bool daq_check_send_data(daq_data_t* data);
+
+
 /*! \brief Function to send the DAQ data packet via USB
 * \param data           Pointer to the DAQ data packet
 * \param frame_size     Size of the USB frame in bytes

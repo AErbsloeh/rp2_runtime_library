@@ -53,6 +53,25 @@ bool daq_is_fifo_full(daq_data_t* data){
 };
 
 
+bool daq_check_send_data(daq_data_t* data){
+    if(daq_sample_data.send_batch){
+        if(daq_is_fifo_full(&daq_sample_data)){
+            daq_sample_data.iteration ++;
+            daq_send_data_usb(&daq_sample_data, daq_sample_data.data->length);
+            return true;
+        };    
+    } else {
+        if(daq_sample_data.new_data){
+            daq_sample_data.new_data = false;  
+            daq_sample_data.iteration ++;
+            daq_send_data_usb(&daq_sample_data, 2);
+            return true;
+        };
+    }
+    return false;
+};
+
+
 void daq_send_data_usb(daq_data_t* data, size_t num_samples){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = 11 + (num_samples * data_format);
