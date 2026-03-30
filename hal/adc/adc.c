@@ -111,8 +111,8 @@ bool rp2_adc_init(rp2_adc_t* config){
 
     adc_init();
     rp2_adc_change_channel(config, config->adc_channel);
-    
-    if(config->buffersize > 1)
+
+    if(config->buffersize > 1){
         buffer_a = malloc(config->buffersize * sizeof(uint16_t));
         buffer_b = malloc(config->buffersize * sizeof(uint16_t));
 
