@@ -1,4 +1,4 @@
-#include "sens/mic_amplifier.h"
+#include "sens/max9814/max9814.h"
 
 
 bool mic_amp_max9814_init(mic_t* config){
