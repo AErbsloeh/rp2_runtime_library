@@ -39,6 +39,7 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] Digital Potentiometer: AD5141 (I2C, SPI)
 - [x] Digital Potentiometer: AD5142A
 
+
 ## Peripherie Devices
 - [x] Ethernet Module CH9121
 - [x] SD card support
@@ -53,3 +54,4 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] Light: VEML7700
 - [x] Distance Estimuation: VL6180x
 - [x] Current Measuring Unit: PAC193X
+- [x] Microphone Amplifier: MAX9814
