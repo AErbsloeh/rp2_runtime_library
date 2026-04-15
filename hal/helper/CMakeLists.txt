@@ -4,7 +4,6 @@ add_library(hal_helper INTERFACE)
 target_sources(hal_helper INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/helper.c
 )
-)
 
 target_link_libraries(hal_helper INTERFACE
 	pico_stdlib
