@@ -7,21 +7,23 @@
 
 
 /*! \brief Data structure for DAQ sampling data packet
-    \param num_channels Number of channels sampled
-    \param num_samples  Number of samples taken
-    \param packet_id    Identifier for the data packet type
-    \param iteration    Iteration count of the sampling
-    \param runtime      Actual runtime in microseconds since system start
-    \param send_batch   Flag to indicate if data should be sent batch-wise (true) or sample-wise (false)
-    \param new_data     Flag to indicate if new data is available in the FIFO
-    \param data         Sampled data value from channels
+    \param num_channels     Number of channels sampled
+    \param num_samples      Number of samples taken
+    \param packet_id        Identifier for the data packet type
+    \param iteration        Iteration count of the sampling
+    \param runtime_first    Runtime of the first sample in microseconds since system start
+    \param runtime_last     Runtime of the last sample in microseconds since system start
+    \param send_batch       Flag to indicate if data should be sent batch-wise (true) or sample-wise (false)
+    \param new_data         Flag to indicate if new data is available in the FIFO
+    \param data             Sampled data value from channels
 */
 typedef struct {
     uint16_t const num_channels;
     uint16_t const num_samples;
     uint8_t const packet_id;
     uint8_t volatile iteration;
-    uint64_t volatile runtime;
+    uint64_t volatile runtime_first;
+    uint64_t volatile runtime_last;
     bool volatile send_batch;
     bool volatile new_data;
     fifo_t* data;
@@ -81,6 +83,13 @@ bool daq_pop_data_from_fifo(daq_data_t* data, void* data_out);
 bool daq_is_fifo_full(daq_data_t* data);
 
 
+/*! \brief Function to check if the DAQ FIFO is empty
+* \param data           Pointer to the DAQ data structure
+* \return               true if the FIFO is empty, false otherwise
+*/
+bool daq_is_empty_fifo(daq_data_t* data);
+
+
 /*! \brief Function to check if the DAQ data is ready to be sent
 * \param data           Pointer to the DAQ data structure
 * \return               true if data is ready to be sent, false otherwise
@@ -93,7 +102,28 @@ bool daq_check_send_data(daq_data_t* data);
 * \param frame_size     Size of the USB frame in bytes
 * \param num_samples    Number of samples to send
 */
-void daq_send_data_usb(daq_data_t* data, size_t num_samples);
+void daq_send_data_usb(daq_data_t* data);
+
+/*! \brief Function for processing the data in th DAQ IRQ
+*   \param config       Pointer to the DAQ config struct
+*   \param data         Pointer to the DAQ data packet
+*   \return             Boolean (always true) for running the Timer IRQ queue
+*/
+bool daq_irq_process(daq_data_t* config, void* data);
+
+
+/*! \brief Function to calculate the number of bytes per sample for USB transmission
+    \param data       Pointer to the DAQ data structure
+    \return           Number of bytes per sample for USB transmission
+*/
+uint16_t daq_get_number_bytes_per_sample(daq_data_t* data);
+
+
+/*! \brief Function to calculate the number of bytes per batch for USB transmission
+    \param data       Pointer to the DAQ data structure
+    \return           Number of bytes per batch for USB transmission
+*/
+uint16_t daq_get_number_bytes_per_batch(daq_data_t* data);
 
 
 #endif

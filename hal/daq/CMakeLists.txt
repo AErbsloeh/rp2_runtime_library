@@ -9,6 +9,7 @@ target_sources(hal_daq INTERFACE
 target_link_libraries(hal_daq INTERFACE
 	pico_stdlib
     hal_tmr
+    hal_helper
 )
 
 target_include_directories(hal_daq INTERFACE
