@@ -22,6 +22,7 @@
 * \param flash_active   Boolean if flash process to FPGA or Flash device is actually running
 * \param init_done      Boolean if device configuration is done   
 * \param page_size      Integer with number of bytes in each page of the FPGA flash device   
+* \param block_size     Integer with number of bytes in each block of the FPGA flash device   
 */
 typedef struct{
     spi_rp2_t* spi;
@@ -34,6 +35,7 @@ typedef struct{
     bool flash_active;    
     bool init_done;
     uint16_t page_size;
+    uint16_t block_size;
 } flash_fpga_t;
 
 
@@ -113,18 +115,34 @@ bool fpga_flash_write_data(flash_fpga_t *config, uint32_t start_adress, uint8_t*
 bool fpga_flash_read_data(flash_fpga_t *config, uint32_t start_adress, uint8_t* data, size_t data_len);
 
 
-/*! \brief Function for erasing the whole FPGA flash (complete process with waiting)
+/*! \brief Function for erasing the selected sector inside the FPGA flash (complete process)
+* \param config         Pointer to device struct
+* \param start_address  Integer with the byte-wise start address of the flash
+* \return               Bool if erasing was successful
+*/
+bool fpga_flash_erasing_sector_complete(flash_fpga_t *config, uint32_t start_address);
+
+
+/*! \brief Function for erasing the whole FPGA flash content (complete process)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool fpga_flash_erasing_complete(flash_fpga_t *config);
+bool fpga_flash_erasing_all_complete(flash_fpga_t *config);
 
 
-/*! \brief Function for erasing the whole FPGA flash (start process)
+/*! \brief Function for erasing the whole FPGA flash content (start process)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool fpga_flash_erasing_start(flash_fpga_t *config);
+bool fpga_flash_erasing_all_start(flash_fpga_t *config);
+
+
+/*! \brief Function for erasing the selected sector inside the FPGA flash (start process)
+* \param config         Pointer to device struct
+* \param start_address  Integer with the byte-wise start address of the flash
+* \return               Bool if erasing was successful
+*/
+bool fpga_flash_erasing_sector_start(flash_fpga_t *config, uint32_t start_address);
 
 
 /*! \brief Function for checking if the FPGA flash erasing process is done

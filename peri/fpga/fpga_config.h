@@ -8,7 +8,7 @@ static spi_rp2_t spi_flash_env5 = {
         .pin_mosi = 3,
         .pin_sclk = 2,
         .pin_miso = 0,
-        .fspi_khz = 8000,
+        .fspi_khz = 48000,
         .mode = 0,
         .msb_first = true,
         .init_done = false
@@ -24,6 +24,7 @@ static flash_fpga_t flash_env5 = {
     .flash_active = false,
     .init_done = false,
     .page_size = 256,
+    .block_size = 4096 * 8,
 };
 static spi_rp2_t spi_fpga_env5 = {
     .spi_mod = spi0,

@@ -3,7 +3,7 @@
 /* TODO
 - Implement buffer with page size
 - What happens with INIT_B if not used?
-- Implement RPC for flashing
+- Add 4-bytes addressing for larger flash devices (>16MB, other commands)
 */
 // ======================== DEFINES =========================
 #define FLASH_CMD_WRITE_ENABLE      0x06
@@ -12,6 +12,7 @@
 #define FLASH_CMD_MANU              0x90
 #define FLASH_CMD_JEDEC             0x9F
 #define FLASH_CMD_ERASE_ALL         0xC7
+#define FLASH_CMD_ERASE_SECTOR      0xD8
 #define FLASH_INS_READ              0x03
 #define FLASH_INS_WRITE             0x02
 
@@ -124,7 +125,7 @@ uint16_t fpga_flash_get_status_register(flash_fpga_t *config){
         return false;
     }
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data_tx[1] = {FLASH_CMD_STATUS_REG0};
     uint8_t data_rx[1] = {0x00};
@@ -132,7 +133,7 @@ uint16_t fpga_flash_get_status_register(flash_fpga_t *config){
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_read_data(config, data_rx, sizeof(data_rx));
     gpio_put(config->gpio_csn, true);
-    sleep_us(10);
+    sleep_us(1);
 
     fpga_program_disable_spi(config);
     return data_rx[0];
@@ -141,7 +142,7 @@ uint16_t fpga_flash_get_status_register(flash_fpga_t *config){
 
 uint16_t fpga_flash_get_device_id(flash_fpga_t *config){
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data_tx[4] = {0x00};
     data_tx[0] = FLASH_CMD_MANU;
@@ -152,7 +153,7 @@ uint16_t fpga_flash_get_device_id(flash_fpga_t *config){
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_read_data(config, data_rx, sizeof(data_rx));
     gpio_put(config->gpio_csn, true);
-    sleep_us(10);
+    sleep_us(1);
 
     fpga_program_disable_spi(config);
     return (data_rx[0] << 8) | data_rx[1];
@@ -161,7 +162,7 @@ uint16_t fpga_flash_get_device_id(flash_fpga_t *config){
 
 uint16_t fpga_flash_get_jedec_id(flash_fpga_t *config){
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data_tx[1] = {FLASH_CMD_JEDEC};
     uint8_t data_rx[3] = {0x00};
@@ -170,7 +171,7 @@ uint16_t fpga_flash_get_jedec_id(flash_fpga_t *config){
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_read_data(config, data_rx, sizeof(data_rx));
     gpio_put(config->gpio_csn, true);
-    sleep_us(10);
+    sleep_us(1);
 
     fpga_program_disable_spi(config);
     return (data_rx[1] << 8) | data_rx[2];
@@ -179,7 +180,7 @@ uint16_t fpga_flash_get_jedec_id(flash_fpga_t *config){
 
 uint8_t fpga_flash_get_manufacturer_id(flash_fpga_t *config){
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data_tx[1] = {FLASH_CMD_JEDEC};
     uint8_t data_rx[3] = {0x00};
@@ -188,7 +189,7 @@ uint8_t fpga_flash_get_manufacturer_id(flash_fpga_t *config){
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_read_data(config, data_rx, sizeof(data_rx));
     gpio_put(config->gpio_csn, true);
-    sleep_us(10);
+    sleep_us(1);
 
     fpga_program_disable_spi(config);
     return data_rx[0];
@@ -197,29 +198,28 @@ uint8_t fpga_flash_get_manufacturer_id(flash_fpga_t *config){
 
 bool fpga_flash_write_data(flash_fpga_t *config, uint32_t start_adress, uint8_t data[], size_t data_len){
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data0[1] = {FLASH_CMD_WRITE_ENABLE};
     send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
-    sleep_us(10);
+    sleep_us(1);
 
-    uint8_t data_tx[4] = {0x00};
-    data_tx[0] = FLASH_INS_WRITE;
-    data_tx[1] = (start_adress >> 16);
-    data_tx[2] = (start_adress >> 8);
-    data_tx[3] = (start_adress >> 0);
+    uint8_t data_tx[4] = {FLASH_INS_WRITE};
+    data_tx[1] = (uint8_t)(start_adress >> 16);
+    data_tx[2] = (uint8_t)(start_adress >> 8);
+    data_tx[3] = (uint8_t)(start_adress >> 0);
 
     gpio_put(config->gpio_csn, false);
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_send_data(config, data, data_len);
     gpio_put(config->gpio_csn, true);
 
-    sleep_us(10);
+    sleep_us(1);
     data0[0] = FLASH_CMD_WRITE_DISABLE;
     send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
 
     do {
-        sleep_us(10);
+        sleep_us(1);
     } while (!fpga_flash_erasing_is_done(config));
 
     return fpga_program_disable_spi(config);
@@ -228,48 +228,77 @@ bool fpga_flash_write_data(flash_fpga_t *config, uint32_t start_adress, uint8_t 
 
 bool fpga_flash_read_data(flash_fpga_t *config, uint32_t start_adress, uint8_t data_rx[], size_t datarx_len){
     fpga_program_enable_spi(config);
-    sleep_ms(1);
+    sleep_us(1);
 
-    uint8_t data_tx[4] = {0x00};
-    data_tx[0] = FLASH_INS_READ;
-    data_tx[1] = (start_adress >> 16);
-    data_tx[2] = (start_adress >> 8);
-    data_tx[3] = (start_adress >> 0);
+    uint8_t data_tx[4] = {FLASH_INS_READ};
+    data_tx[1] = (uint8_t)(start_adress >> 16);
+    data_tx[2] = (uint8_t)(start_adress >> 8);
+    data_tx[3] = (uint8_t)(start_adress >> 0);
 
     gpio_put(config->gpio_csn, false);
     fpga_send_data(config, data_tx, sizeof(data_tx));
     fpga_read_data(config, data_rx, datarx_len);
     gpio_put(config->gpio_csn, true);
 
-    sleep_us(10);
+    sleep_us(1);
     return fpga_program_disable_spi(config);
 }
 
 
-bool fpga_flash_erasing_complete(flash_fpga_t *config){
-    fpga_flash_erasing_start(config);
+bool fpga_flash_erasing_sector_complete(flash_fpga_t *config, uint32_t start_address){
+    fpga_flash_erasing_sector_start(config, start_address);
     do {
-        sleep_ms(100);
+        sleep_us(10);
     } while (!fpga_flash_erasing_is_done(config));
     return fpga_flash_erasing_stop(config);
 }
 
 
-bool fpga_flash_erasing_start(flash_fpga_t *config){
+bool fpga_flash_erasing_all_complete(flash_fpga_t *config){
+    fpga_flash_erasing_all_start(config);
+    do {
+        sleep_us(10);
+    } while (!fpga_flash_erasing_is_done(config));
+    return fpga_flash_erasing_stop(config);
+}
+
+
+bool fpga_flash_erasing_all_start(flash_fpga_t *config){
     fpga_program_enable_spi(config);
-    sleep_us(10);
+    sleep_us(1);
 
     uint8_t data0[1] = {FLASH_CMD_WRITE_ENABLE};
     send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
-    sleep_us(10);
+    sleep_us(1);
 
-    uint8_t data_tx[1] = {0x00};
-    data_tx[0] = FLASH_CMD_ERASE_ALL;
+    uint8_t data_tx[1] = {FLASH_CMD_ERASE_ALL};
 
     gpio_put(config->gpio_csn, false);
     fpga_send_data(config, data_tx, sizeof(data_tx));
     gpio_put(config->gpio_csn, true);
-    sleep_us(10);
+    sleep_us(1);
+
+    return true;
+}
+
+
+bool fpga_flash_erasing_sector_start(flash_fpga_t *config, uint32_t start_address){
+    fpga_program_enable_spi(config);
+    sleep_us(1);
+
+    uint8_t data0[1] = {FLASH_CMD_WRITE_ENABLE};
+    send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
+    sleep_us(1);
+
+    uint8_t data_tx[4] = {FLASH_CMD_ERASE_SECTOR};
+    data_tx[1] = (uint8_t)(start_address >> 16);
+    data_tx[2] = (uint8_t)(start_address >> 8);
+    data_tx[3] = (uint8_t)(start_address >> 0);
+
+    gpio_put(config->gpio_csn, false);
+    fpga_send_data(config, data_tx, sizeof(data_tx));
+    gpio_put(config->gpio_csn, true);
+    sleep_us(1);
 
     return true;
 }
@@ -292,8 +321,6 @@ bool fpga_flash_erasing_stop(flash_fpga_t *config) {
     uint8_t data0[1] = {FLASH_CMD_WRITE_DISABLE};
     send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
 
-    sleep_us(10);
+    sleep_us(1);
     return fpga_program_disable_spi(config);
 }
-
-
