@@ -59,7 +59,11 @@ int main(){
 
     /* --- Erasing flash content --- */
     printf("\nErasing flash content...\n");
-    fpga_flash_erase_chip(&flash_env5);
+    fpga_flash_erase_chip_with_waiting(&flash_env5);
+    //fpga_flash_erase_chip_start(&flash_env5);
+    //while(!fpga_flash_erase_chip_is_done(&flash_env5))
+    //    sleep_ms(100);
+    //fpga_flash_erase_chip_stop(&flash_env5);
     sleep_ms(1);
 
 

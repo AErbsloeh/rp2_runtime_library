@@ -53,9 +53,6 @@ bool fpga_program_enable_spi(flash_fpga_t *config){
 
 
 bool flash_wait_ready(flash_fpga_t *config) {
-    uint8_t cmd[1] = {FLASH_CMD_STATUS_REG0};
-    uint8_t status[1] = {0x00};
-
     do {
         gpio_put(config->gpio_csn, false);
         fpga_send_data(config, cmd, sizeof(cmd));
@@ -259,7 +256,7 @@ bool fpga_flash_read_data(flash_fpga_t *config, uint32_t start_adress, uint8_t d
 }
 
 
-bool fpga_flash_erase_chip(flash_fpga_t *config){
+bool fpga_flash_erasing_complete(flash_fpga_t *config){
     fpga_program_enable_spi(config);
     sleep_us(10);
 
@@ -279,6 +276,48 @@ bool fpga_flash_erase_chip(flash_fpga_t *config){
 
     sleep_us(10);
     data0[0] = FLASH_CMD_WRITE_DISABLE;
+    send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
+
+    sleep_us(10);
+    return fpga_program_disable_spi(config);
+}
+
+
+bool fpga_flash_erasing_start(flash_fpga_t *config){
+    fpga_program_enable_spi(config);
+    sleep_us(10);
+
+    uint8_t data0[1] = {FLASH_CMD_WRITE_ENABLE};
+    send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
+    sleep_us(10);
+
+    uint8_t data_tx[1] = {0x00};
+    data_tx[0] = FLASH_CMD_ERASE_ALL;
+
+    gpio_put(config->gpio_csn, false);
+    fpga_send_data(config, data_tx, sizeof(data_tx));
+    gpio_put(config->gpio_csn, true);
+    sleep_us(10);
+
+    return true;
+}
+
+
+bool fpga_flash_erasing_is_done(flash_fpga_t *config){
+    uint8_t cmd[1] = {FLASH_CMD_STATUS_REG0};
+    uint8_t status[1] = {0x00};
+
+    gpio_put(config->gpio_csn, false);
+    fpga_send_data(config, cmd, sizeof(cmd));
+    fpga_read_data(config, status, sizeof(status));
+    gpio_put(config->gpio_csn, true);
+
+    return !(status[0] & 0x01);
+}
+
+
+bool fpga_flash_erasing_stop(flash_fpga_t *config) {
+    uint8_t data0[1] = {FLASH_CMD_WRITE_DISABLE};
     send_data_spi_module(config->spi, config->gpio_csn, data0, sizeof(data0));
 
     sleep_us(10);

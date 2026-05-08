@@ -113,11 +113,32 @@ bool fpga_flash_write_data(flash_fpga_t *config, uint32_t start_adress, uint8_t*
 bool fpga_flash_read_data(flash_fpga_t *config, uint32_t start_adress, uint8_t* data, size_t data_len);
 
 
-/*! \brief Function for erasing the whole FPGA flash
+/*! \brief Function for erasing the whole FPGA flash (complete process with waiting)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool fpga_flash_erase_chip(flash_fpga_t *config);
+bool fpga_flash_erasing_complete(flash_fpga_t *config);
+
+
+/*! \brief Function for erasing the whole FPGA flash (start process)
+* \param config         Pointer to device struct
+* \return               Bool if erasing was successful
+*/
+bool fpga_flash_erasing_start(flash_fpga_t *config);
+
+
+/*! \brief Function for checking if the FPGA flash erasing process is done
+* \param config         Pointer to device struct
+* \return               Bool if erasing is done
+*/
+bool fpga_flash_erasing_is_done(flash_fpga_t *config);
+
+
+/*! \brief Function for erasing the whole FPGA flash (end process)
+* \param config         Pointer to device struct
+* \return               Bool if erasing was successful
+*/
+bool fpga_flash_erasing_stop(flash_fpga_t *config);
 
 
 #endif
