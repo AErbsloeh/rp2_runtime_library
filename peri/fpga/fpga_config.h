@@ -4,14 +4,14 @@
 
 
 static spi_rp2_t spi_flash_env5 = {
-        .spi_mod = spi0,
-        .pin_mosi = 3,
-        .pin_sclk = 2,
-        .pin_miso = 0,
-        .fspi_khz = 48000,
-        .mode = 0,
-        .msb_first = true,
-        .init_done = false
+    .spi_mod = spi0,
+    .pin_mosi = 3,
+    .pin_sclk = 2,
+    .pin_miso = 0,
+    .fspi_khz = 48000,
+    .mode = 0,
+    .msb_first = true,
+    .init_done = false
 };
 static flash_fpga_t flash_env5 = {
     .spi = &spi_flash_env5,
@@ -21,8 +21,7 @@ static flash_fpga_t flash_env5 = {
     .use_initb = false,
     .gpio_done = 255,
     .use_done = false,
-    .flash_active = false,
-    .init_done = false,
+    .use_32bit = false,
     .page_size = 256,
     .block_size = 4096 * 8,
 };

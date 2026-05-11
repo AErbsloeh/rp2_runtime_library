@@ -39,37 +39,37 @@ int main(){
         }
 
     /* --- Reading flash meta information --- */
-    uint16_t ret = fpga_flash_get_device_id(&flash_env5);
+    uint16_t ret = flash_get_device_id(&flash_env5);
     printf("\n");
     printf("Device ID: %04x\n", ret);
     sleep_ms(1);
     
-    ret = fpga_flash_get_jedec_id(&flash_env5);
+    ret = flash_get_jedec_id(&flash_env5);
     printf("JEDEC ID: %04x\n", ret);
     sleep_ms(1);
 
-    ret = fpga_flash_get_manufacturer_id(&flash_env5);
+    ret = flash_get_manufacturer_id(&flash_env5);
     printf("Manufacturer ID: %04x\n", ret);
     sleep_ms(1);
 
-    ret = fpga_flash_get_status_register(&flash_env5);
+    ret = flash_get_status_register(&flash_env5);
     printf("Status Register: %04x\n", ret);
     sleep_ms(1);
 
 
     /* --- Erasing flash content --- */
     printf("\nErasing flash content...\n");
-    fpga_flash_erasing_complete(&flash_env5);
-    /*fpga_flash_erasing_start(&flash_env5);
-    while(!fpga_flash_erasing_is_done(&flash_env5))
+    flash_erasing_all_complete(&flash_env5);
+    /*flash_erasing_all_start(&flash_env5);
+    while(!flash_erasing_is_done(&flash_env5))
         sleep_ms(100);
-    fpga_flash_erasing_stop(&flash_env5);*/
+    flash_erasing_stop(&flash_env5);*/
     sleep_ms(1);
 
 
     /* --- Reading flash content --- */
     uint8_t data_rx[256];
-    fpga_flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
+    flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
     printf("\nRead flash content (%d bytes) before change:\n", sizeof(data_rx));
     for(uint16_t idx=0; idx < 256; idx++){
         printf("%02x ", data_rx[idx]); 
@@ -82,13 +82,13 @@ int main(){
     data_rx[1] = 0x04;
     data_rx[2] = 0xff;
     printf("\nWrite flash content (%d bytes) before change:\n", sizeof(data_rx));
-    bool written_state = fpga_flash_write_data(&flash_env5, 0, data_rx, sizeof(data_rx));
+    bool written_state = flash_write_data(&flash_env5, 0, data_rx, sizeof(data_rx));
     sleep_ms(1);
     printf("Written state: %02x\n", written_state);
 
 
     /* --- Reading flash content --- */
-    fpga_flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
+    flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
     printf("\nRead flash content (%d bytes) after change:\n", sizeof(data_rx));
     for(uint16_t idx=0; idx < 256; idx++){
         printf("%02x ", data_rx[idx]); 
