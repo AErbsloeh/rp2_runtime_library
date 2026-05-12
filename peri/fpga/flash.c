@@ -344,7 +344,7 @@ bool flash_read_data(flash_fpga_t *config, uint32_t start_address, uint8_t data_
     flash_program_write_disable(config);
 
     gpio_put(config->gpio_csn, false);
-    flash_send_transmission(config, data_tx, sizeof(data_tx));
+    flash_send_transmission(config, data_tx, data_tx_len);
     flash_receive_transmission(config, data_rx, datarx_len);
     gpio_put(config->gpio_csn, true);
 
@@ -414,7 +414,7 @@ bool flash_erasing_sector_start(flash_fpga_t *config, uint32_t start_address){
     flash_program_write_enable(config);
 
     gpio_put(config->gpio_csn, false);
-    flash_send_transmission(config, data_tx, sizeof(data_tx));
+    flash_send_transmission(config, data_tx, data_tx_len);
     gpio_put(config->gpio_csn, true);
     sleep_us(1);
 
