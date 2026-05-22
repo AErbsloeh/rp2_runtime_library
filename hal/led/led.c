@@ -1,7 +1,7 @@
 #include "hal/led/led.h"
 #ifdef LED_CYW43_SUPPORTED
     #include "pico/cyw43_arch.h"
-#elif LED_KB2040_SUPPORTED
+#elif LED_KB2040_SUPPORTED || USE_WS2812_DEFAULT
 	#include "peri/ws2812/ws2812.h"
 #else
 	#include "hardware/gpio.h"
@@ -10,6 +10,7 @@
 // ======================================== INTERNAL FUNCTIONS ===============================================
 static uint8_t pin_used = 0;	// Default pin of board LED (Pico / Pico 2)
 static bool led_state = false;
+static uint8_t led_rgb[3] = {0, 20, 0};
 
 
 // ======================================== CALLABLE FUNCTIONS ===============================================
@@ -33,10 +34,12 @@ uint8_t get_gpio_default_led(void){
 
 bool init_default_led(void){
 	led_state = false;
-	set_gpio_default_led(25);
-	#ifdef LED_CYW43_SUPPORTED
+	if (get_gpio_default_led() == 0){
+		set_gpio_default_led(25);
+	}
+	#ifdef LED_CYW43_SUPPORTED	
 		cyw43_arch_gpio_put(pin_used, false);
-	#elif LED_KB2040_SUPPORTED
+	#elif LED_KB2040_SUPPORTED || USE_WS2812_DEFAULT
 		PIO pio = pio0;
 		ws2812_init(pio, pin_used);
 		put_pixel_rgb(0, 0, 0); 
@@ -54,6 +57,7 @@ bool init_default_led(void){
 		gpio_set_dir(20, GPIO_OUT);
 		gpio_put(20, true);		
 	#else
+		set_gpio_default_led(25);
 		gpio_init(pin_used);
 		gpio_set_dir(pin_used, GPIO_OUT);
 		gpio_put(pin_used, false);
@@ -66,9 +70,9 @@ bool set_state_default_led(bool state){
 	led_state = state;
 	#ifdef LED_CYW43_SUPPORTED 
 		cyw43_arch_gpio_put(pin_used, led_state);
-	#elif LED_KB2040_SUPPORTED
+	#elif LED_KB2040_SUPPORTED || USE_WS2812_DEFAULT
 		if(led_state) 
-			put_pixel_rgb(0, 32, 0);
+			put_pixel_rgb(led_rgb[0], led_rgb[1], led_rgb[2]);
 		else
 			put_pixel_rgb(0, 0, 0);
 	#elif LED_TINY2040_SUPPORTED
@@ -87,7 +91,7 @@ bool set_state_default_led(bool state){
 bool get_state_default_led(void){
 	#ifdef LED_CYW43_SUPPORTED
 		// GPIO pin for the LED on the CYW43 is write-only
-	#elif LED_KB2040_SUPPORTED
+	#elif LED_KB2040_SUPPORTED || USE_WS2812_DEFAULT
 		// WS2812 state cannot be read back
 	#elif LED_TINY2040_SUPPORTED
 		led_state = !gpio_get(pin_used);
@@ -106,3 +110,15 @@ bool toggle_state_default_led(void){
 	}
 	return led_state;
 };
+
+
+#ifdef USE_WS2812_DEFAULT || LED_KB2040_SUPPORTED
+	void set_color_default_led(uint8_t red, uint8_t green, uint8_t blue){
+		led_rgb[0] = red;
+		led_rgb[1] = green;
+		led_rgb[2] = blue;
+		led_state = red > 0 || green > 0 || blue > 0;
+		put_pixel_rgb(led_rgb[0], led_rgb[1], led_rgb[2]);
+	}
+
+#endif
