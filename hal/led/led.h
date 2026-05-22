@@ -54,3 +54,4 @@ bool toggle_state_default_led(void);
     void set_color_default_led(uint8_t red, uint8_t green, uint8_t blue);
 #endif
 #endif
+
