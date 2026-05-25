@@ -10,8 +10,7 @@
 
 int main(){   
     // Init Phase
-    PIO pio = pio0;
-    clk_generation_pio_init(pio, CLK_PIO_PIN, CLK_FRQ_VAL, 125000000);
+    clk_generation_pio_init(pio0, CLK_PIO_PIN, CLK_FRQ_VAL);
 	
 	// Infinity Loop
     while (true){
