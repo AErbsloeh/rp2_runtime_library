@@ -104,6 +104,7 @@ bool daq_check_send_data(daq_data_t* data);
 */
 void daq_send_data_usb(daq_data_t* data);
 
+
 /*! \brief Function for processing the data in th DAQ IRQ
 *   \param config       Pointer to the DAQ config struct
 *   \param data         Pointer to the DAQ data packet
