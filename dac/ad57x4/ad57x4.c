@@ -1,6 +1,5 @@
 #include "dac/ad57x4/ad57x4.h"
 #include "hardware/gpio.h"
-#include <stdio.h>
 
 
 // =========================== INTERNAL FUNCTIONS ===========================
@@ -47,7 +46,6 @@ bool ad57x4_init(ad57x4_t *config){
     // --- Do configuration
     // Writing to the "Power control register"
     uint16_t data = 0x0000 | config->en_pwr_chnnl;
-    printf("Data Power Control: %d\n", data);
     ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_PWR, 0x00, data);
     
     // Writing to the "Control register"
