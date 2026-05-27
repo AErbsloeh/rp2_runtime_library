@@ -66,6 +66,8 @@ bool enable_system_power_single(power_single_t *config){
         while(!state){
             sleep_ms(1000);
         }
+    } else {
+        state = true;
     }
     config->state = state;
     return config->state;
