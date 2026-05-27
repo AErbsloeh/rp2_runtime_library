@@ -177,10 +177,19 @@ uint8_t BMI270_i2c_get_power_register(bmi270_i2c_rp2_t *handler){
 }
 
 
-double BMI270_i2c_get_temperature(bmi270_i2c_rp2_t *handler){
+int16_t BMI270_i2c_get_temperature_integer(bmi270_i2c_rp2_t *handler){
     if(handler->en_temp_sensor){
         uint8_t data[2] = {0x22};
-        int16_t temp_raw = BMI270_i2c_read_data(handler, 0x22, data, 2);
+        return (int16_t)BMI270_i2c_read_data(handler, 0x22, data, 2);
+    } else {
+        return 0;
+    };
+}
+
+
+double BMI270_i2c_get_temperature(bmi270_i2c_rp2_t *handler){
+    if(handler->en_temp_sensor){
+        int16_t temp_raw = BMI270_i2c_get_temperature_integer(handler);
         return temp_raw * 0.001952594 + 23.0;
     } else {
         return 0.0;
@@ -192,6 +201,63 @@ double BMI270_i2c_get_sensor_time(bmi270_i2c_rp2_t *handler){
     uint8_t data[3] = {0x18};
     double time_raw = BMI270_i2c_read_data(handler, 0x18, data, 3) * 39.0625e-6;
     return time_raw;
+}
+
+
+double BMI270_get_scale_accelerator(bmi270_i2c_rp2_t *handler){
+    double value = 0.0;
+    switch(handler->acc_range){
+        case(BMI270_ACC_RANGE_16G):     value = 16.0;   break;
+        case(BMI270_ACC_RANGE_8G):      value = 8.0;    break;
+        case(BMI270_ACC_RANGE_4G):      value = 4.0;    break;
+        case(BMI270_ACC_RANGE_2G):      value = 2.0;    break;
+    };
+    return value / 32768;
+}
+
+
+bmi270_int_t BMI270_i2c_get_accelerator_data_integer(bmi270_i2c_rp2_t *handler){
+    if(handler->en_acc_sensor && handler->init_done){
+        uint8_t data[6] = {0x0C};
+        BMI270_i2c_read_data(handler, 0x0C, data, 6);
+
+        int16_t z = (data[5] << 8) | (data[4] << 0);
+        int16_t y = (data[3] << 8) | (data[2] << 0);
+        int16_t x = (data[1] << 8) | (data[0] << 0);
+
+        bmi270_int_t data0 = {
+            .temp = BMI270_i2c_get_temperature_integer(handler),
+            .gyro_x = 0,
+            .gyro_y = 0,
+            .gyro_z = 0,
+            .acc_z = z,
+            .acc_y = y,
+            .acc_x = x
+        };
+        return data0;
+    } else {
+        return BMI270_INT_DEFAULT;
+    };
+}
+
+
+bmi270_double_t BMI270_i2c_get_accelerator_data(bmi270_i2c_rp2_t *handler){
+    if(handler->en_acc_sensor && handler->init_done){
+        bmi270_int_t data_int = BMI270_i2c_get_accelerator_data_integer(handler);
+        bmi270_double_t data0 = {
+            .temp = BMI270_i2c_get_temperature(handler),
+            .time =  BMI270_i2c_get_sensor_time(handler),
+            .gyro_x = 0,
+            .gyro_y = 0,
+            .gyro_z = 0,
+            .acc_z = data_int.acc_z * BMI270_get_scale_accelerator(handler),
+            .acc_y = data_int.acc_y * BMI270_get_scale_accelerator(handler),
+            .acc_x = data_int.acc_x * BMI270_get_scale_accelerator(handler)
+        };
+        return data0;
+    } else {
+        return BMI270_DOUBLE_DEFAULT;
+    };
 }
 
 
@@ -208,18 +274,17 @@ double BMI270_get_scale_gyroscope(bmi270_i2c_rp2_t *handler){
 }
 
 
-bmi270_data_t BMI270_i2c_get_gyroscope_data(bmi270_i2c_rp2_t *handler){
+bmi270_int_t BMI270_i2c_get_gyroscope_data_integer(bmi270_i2c_rp2_t *handler){
     if(handler->en_gyro_sensor && handler->init_done){
         uint8_t data[6] = {0x12};
         BMI270_i2c_read_data(handler, 0x12, data, 6);
 
-        double z = (int16_t)((data[5] << 8) | (data[4] << 0)) * BMI270_get_scale_gyroscope(handler);
-        double y = (int16_t)((data[3] << 8) | (data[2] << 0)) * BMI270_get_scale_gyroscope(handler);
-        double x = (int16_t)((data[1] << 8) | (data[0] << 0)) * BMI270_get_scale_gyroscope(handler);
+        int16_t z = (data[5] << 8) | (data[4] << 0);
+        int16_t y = (data[3] << 8) | (data[2] << 0);
+        int16_t x = (data[1] << 8) | (data[0] << 0);
 
-        bmi270_data_t data0 = {
-            .temp = BMI270_i2c_get_temperature(handler),
-            .time =  BMI270_i2c_get_sensor_time(handler),
+        bmi270_int_t data0 = {
+            .temp = BMI270_i2c_get_temperature_integer(handler),
             .gyro_x = x,
             .gyro_y = y,
             .gyro_z = z,
@@ -229,65 +294,45 @@ bmi270_data_t BMI270_i2c_get_gyroscope_data(bmi270_i2c_rp2_t *handler){
         };
         return data0;
     } else {
-        return BMI270_DATA_DEFAULT;
+        return BMI270_INT_DEFAULT;
     };
 }    
 
 
-double BMI270_get_scale_accelerator(bmi270_i2c_rp2_t *handler){
-    double value = 0.0;
-    switch(handler->acc_range){
-        case(BMI270_ACC_RANGE_16G):     value = 16.0;   break;
-        case(BMI270_ACC_RANGE_8G):      value = 8.0;    break;
-        case(BMI270_ACC_RANGE_4G):      value = 4.0;    break;
-        case(BMI270_ACC_RANGE_2G):      value = 2.0;    break;
-    };
-    return value / 32768;
-}
-
-
-bmi270_data_t BMI270_i2c_get_accelerator_data(bmi270_i2c_rp2_t *handler){
-    if(handler->en_acc_sensor && handler->init_done){
-        uint8_t data[6] = {0x0C};
-        BMI270_i2c_read_data(handler, 0x0C, data, 6);
-
-        double z = (int16_t)((data[5] << 8) | (data[4] << 0)) * BMI270_get_scale_accelerator(handler);
-        double y = (int16_t)((data[3] << 8) | (data[2] << 0)) * BMI270_get_scale_accelerator(handler);
-        double x = (int16_t)((data[1] << 8) | (data[0] << 0)) * BMI270_get_scale_accelerator(handler);
-
-        bmi270_data_t data0 = {
+bmi270_double_t BMI270_i2c_get_gyroscope_data(bmi270_i2c_rp2_t *handler){
+    if(handler->en_gyro_sensor && handler->init_done){
+        bmi270_int_t data_int = BMI270_i2c_get_gyroscope_data_integer(handler);
+        bmi270_double_t data0 = {
             .temp = BMI270_i2c_get_temperature(handler),
             .time =  BMI270_i2c_get_sensor_time(handler),
-            .gyro_x = 0,
-            .gyro_y = 0,
-            .gyro_z = 0,
-            .acc_z = z,
-            .acc_y = y,
-            .acc_x = x
+            .gyro_x = data_int.gyro_x * BMI270_get_scale_gyroscope(handler),
+            .gyro_y = data_int.gyro_y * BMI270_get_scale_gyroscope(handler),
+            .gyro_z = data_int.gyro_z * BMI270_get_scale_gyroscope(handler),
+            .acc_z = 0,
+            .acc_y = 0,
+            .acc_x = 0
         };
         return data0;
     } else {
-        return BMI270_DATA_DEFAULT;
+        return BMI270_DOUBLE_DEFAULT;
     };
-}
+}    
 
 
-bmi270_data_t BMI270_i2c_get_all_data(bmi270_i2c_rp2_t *handler){
+bmi270_int_t BMI270_i2c_get_all_data_integer(bmi270_i2c_rp2_t *handler){
     if(handler->en_acc_sensor && handler->en_gyro_sensor && handler->init_done){
         uint8_t data[15] = {0x0C};
         BMI270_i2c_read_data(handler, 0x0C, data, 15);
 
-        double a_x = (int16_t)((data[1] << 8) | (data[0] << 0)) * BMI270_get_scale_accelerator(handler);
-        double a_y = (int16_t)((data[3] << 8) | (data[2] << 0)) * BMI270_get_scale_accelerator(handler);
-        double a_z = (int16_t)((data[5] << 8) | (data[4] << 0)) * BMI270_get_scale_accelerator(handler);
-        double g_x = (int16_t)((data[7] << 8) | (data[6] << 0)) * BMI270_get_scale_gyroscope(handler);
-        double g_y = (int16_t)((data[9] << 8) | (data[8] << 0)) * BMI270_get_scale_gyroscope(handler);
-        double g_z = (int16_t)((data[11] << 8) | (data[10] << 0)) * BMI270_get_scale_gyroscope(handler);
-        double time = (double)(((data[14] << 16) | (data[13] << 8) | (data[12] << 0)) * 39.0625e-6);
+        int16_t a_x = (data[1] << 8) | (data[0] << 0);
+        int16_t a_y = (data[3] << 8) | (data[2] << 0);
+        int16_t a_z = (data[5] << 8) | (data[4] << 0);
+        int16_t g_x = (data[7] << 8) | (data[6] << 0);
+        int16_t g_y = (data[9] << 8) | (data[8] << 0);
+        int16_t g_z = (data[11] << 8) | (data[10] << 0);
 
-        bmi270_data_t data0 = {
-            .temp = BMI270_i2c_get_temperature(handler),
-            .time = time,
+        bmi270_int_t data0 = {
+            .temp = BMI270_i2c_get_temperature_integer(handler),
             .gyro_x = g_x,
             .gyro_y = g_y,
             .gyro_z = g_z,
@@ -298,6 +343,27 @@ bmi270_data_t BMI270_i2c_get_all_data(bmi270_i2c_rp2_t *handler){
         
         return data0;
     } else {
-        return BMI270_DATA_DEFAULT;
+        return BMI270_INT_DEFAULT;
+    };    
+}
+
+
+bmi270_double_t BMI270_i2c_get_all_data(bmi270_i2c_rp2_t *handler){
+    if(handler->en_acc_sensor && handler->en_gyro_sensor && handler->init_done){
+        bmi270_int_t data_int = BMI270_i2c_get_all_data_integer(handler);
+        bmi270_double_t data0 = {
+            .temp = BMI270_i2c_get_temperature(handler),
+            .time = BMI270_i2c_get_sensor_time(handler),
+            .gyro_x = data_int.gyro_x * BMI270_get_scale_gyroscope(handler),
+            .gyro_y = data_int.gyro_y * BMI270_get_scale_gyroscope(handler),
+            .gyro_z = data_int.gyro_z * BMI270_get_scale_gyroscope(handler),
+            .acc_z = data_int.acc_z * BMI270_get_scale_accelerator(handler),
+            .acc_y = data_int.acc_y * BMI270_get_scale_accelerator(handler),
+            .acc_x = data_int.acc_x * BMI270_get_scale_accelerator(handler)
+        };
+        
+        return data0;
+    } else {
+        return BMI270_DOUBLE_DEFAULT;
     };    
 }

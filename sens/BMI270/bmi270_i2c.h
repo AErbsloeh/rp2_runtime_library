@@ -7,7 +7,7 @@
 
 // More Informations from sensor: https://content.arduino.cc/assets/bmi270-ds000.pdf
 // --------------- DEFINITION ---------------
-#define BMI270_I2C_ADR          0x68
+#define BMI270_I2C_ADR      0x68
 
 #define BMI270_ODR_0P78    0x01
 #define BMI270_ODR_1P5     0x02
@@ -75,11 +75,32 @@ typedef struct {
     double acc_x;
     double acc_y;
     double acc_z;
-} bmi270_data_t;
+} bmi270_double_t;
 
-static bmi270_data_t BMI270_DATA_DEFAULT = {
+static bmi270_double_t BMI270_DOUBLE_DEFAULT = {
     .temp = 0.0,
     .time = 0.0,
+    .gyro_x = 0.0,
+    .gyro_y = 0.0,
+    .gyro_z = 0.0,
+    .acc_x = 0.0,
+    .acc_y = 0.0,
+    .acc_z = 0.0
+};
+
+
+typedef struct {
+    int16_t temp;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+    int16_t acc_x;
+    int16_t acc_y;
+    int16_t acc_z;
+} bmi270_int_t;
+
+static bmi270_int_t BMI270_INT_DEFAULT = {
+    .temp = 0,
     .gyro_x = 0,
     .gyro_y = 0,
     .gyro_z = 0,
@@ -156,6 +177,13 @@ uint8_t BMI270_i2c_get_power_register(bmi270_i2c_rp2_t *handler);
 
 /*! \brief Function for getting the temperatur value from BMI270 from Bosch
 *   \param  handler     Handler for setting the device
+*   \return             Temperature data sensor as integer value (raw data, needs to be converted to °C with formula: temp_raw * 0.001952594 + 23.0)
+*/
+int16_t BMI270_i2c_get_temperature_integer(bmi270_i2c_rp2_t *handler);
+
+
+/*! \brief Function for getting the temperatur value from BMI270 from Bosch
+*   \param  handler     Handler for setting the device
 *   \return             Temperature data sensor in °C
 */
 double BMI270_i2c_get_temperature(bmi270_i2c_rp2_t *handler);
@@ -172,21 +200,42 @@ double BMI270_i2c_get_sensor_time(bmi270_i2c_rp2_t *handler);
 *   \param  handler     Handler for setting the device
 *   \return             x-, y-, z-axis data in struct
 */
-bmi270_data_t BMI270_i2c_get_accelerator_data(bmi270_i2c_rp2_t *handler);
+bmi270_int_t BMI270_i2c_get_accelerator_data_integer(bmi270_i2c_rp2_t *handler);
+
+
+/*! \brief Function for getting the accelerator sensor data from BMI270 from Bosch
+*   \param  handler     Handler for setting the device
+*   \return             x-, y-, z-axis data in struct
+*/
+bmi270_double_t BMI270_i2c_get_accelerator_data(bmi270_i2c_rp2_t *handler);
 
 
 /*! \brief Function for getting the gyroscope sensor data from BMI270 from Bosch
 *   \param  handler     Handler for setting the device
 *   \return             x-, y-, z-axis data in struct
 */
-bmi270_data_t BMI270_i2c_get_gyroscope_data(bmi270_i2c_rp2_t *handler);
+bmi270_int_t BMI270_i2c_get_gyroscope_data_integer(bmi270_i2c_rp2_t *handler);
+
+
+/*! \brief Function for getting the gyroscope sensor data from BMI270 from Bosch
+*   \param  handler     Handler for setting the device
+*   \return             x-, y-, z-axis data in struct
+*/
+bmi270_double_t BMI270_i2c_get_gyroscope_data(bmi270_i2c_rp2_t *handler);
 
 
 /*! \brief Function for getting all sensor data from BMI270 from Bosch
 *   \param  handler     Handler for setting the device
 *   \return             x-, y-, z-axis data in struct
 */
-bmi270_data_t BMI270_i2c_get_all_data(bmi270_i2c_rp2_t *handler);
+bmi270_int_t BMI270_i2c_get_all_data_integer(bmi270_i2c_rp2_t *handler);
+
+
+/*! \brief Function for getting all sensor data from BMI270 from Bosch
+*   \param  handler     Handler for setting the device
+*   \return             x-, y-, z-axis data in struct
+*/
+bmi270_double_t BMI270_i2c_get_all_data(bmi270_i2c_rp2_t *handler);
 
 
 #endif
