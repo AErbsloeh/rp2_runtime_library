@@ -1,4 +1,5 @@
-#include "hal/crc/crc.h"
+#include "hal/helper/crc.h"
+
 
 uint16_t crc16_ccitt(const uint8_t *data, size_t len){
     uint16_t crc = 0xFFFF;

@@ -1,8 +1,10 @@
-#ifndef HAL_CRC_CRC_H_
-#define HAL_CRC_CRC_H_
+#ifndef HAL_HELPER_CRC_H_
+#define HAL_HELPER_CRC_H_
+
 
 #include <stdint.h>
 #include <stddef.h>
+
 
 /*! \brief Compute CRC-16-CCITT for a byte buffer.
  *  \param data  Byte buffer to checksum
