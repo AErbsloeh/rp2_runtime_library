@@ -2,8 +2,8 @@
 This repo contains source files for different sensor / devices which can be used in Pico/RP2xxx projects.
 For example you can use the corresponding project template using the [Link](https://github.com/AErbsloeh/pico_runtime_example).
 
-Enjoy. If you have questions and suggestions, please create an issue or contact the authors.
-Further examples can be found in this [repo](https://github.com/analogdevicesinc/no-OS/tree/main).
+Enjoy. If you have questions and suggestions, please create an issue or contact the authors. Further examples can be found in this [repo](https://github.com/analogdevicesinc/no-OS/tree/main).
+
 
 ## Hardware Abstraction Layer (hal)
 - [x] FIFO sampling buffer (without DMA)
@@ -25,6 +25,7 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] LED control of WS2812b (using PIO)
 - [x] Clock Generator with GPIO output (using PIO)
 
+
 ## Device Libraries
 - [x] ADC ADS8881
 - [x] ADC AD7779
@@ -44,11 +45,13 @@ Further examples can be found in this [repo](https://github.com/analogdevicesinc
 - [x] Ethernet Module CH9121
 - [x] SD card support
 - [ ] Ethernet module W5500 (WIP)
-- [ ] FPGA Handler + Flashing (SPI 1x, no bus alignment) for AMD, Lattice and CologneChip FPGAs (WIP)
-- [ ] Adafruit OLED Display 4400
+- [x] FPGA Handler + Flashing (SPI 1x, no bus alignment) for AMD, Lattice and CologneChip FPGAs (WIP)
+- [ ] Adafruit OLED Display 4400 (WIP)
+
 
 ## Sensor Libraries
 - [x] Environmeont Sensor: SHT21
+- [x] Environment Sensor: SHT41
 - [x] Accelerator: ADXL345
 - [x] Accelerator and Gyroscope: BMI270
 - [x] Light: VEML7700
