@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "hal/crc/crc.h"
+#include "hal/helper/crc.h"
 
 int main(void){
     // Example data to test

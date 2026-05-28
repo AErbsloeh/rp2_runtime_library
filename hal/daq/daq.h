@@ -13,6 +13,7 @@
     \param iteration        Iteration count of the sampling
     \param runtime_first    Runtime of the first sample in microseconds since system start
     \param runtime_last     Runtime of the last sample in microseconds since system start
+    \param is_signed        Flag to indicate if the sampled data is signed
     \param send_batch       Flag to indicate if data should be sent batch-wise (true) or sample-wise (false)
     \param new_data         Flag to indicate if new data is available in the FIFO
     \param data             Sampled data value from channels
@@ -24,6 +25,7 @@ typedef struct {
     uint8_t volatile iteration;
     uint64_t volatile runtime_first;
     uint64_t volatile runtime_last;
+    bool volatile is_signed;
     bool volatile send_batch;
     bool volatile new_data;
     fifo_t* data;

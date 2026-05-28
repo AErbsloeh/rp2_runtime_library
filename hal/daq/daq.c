@@ -61,10 +61,10 @@ bool daq_is_empty_fifo(daq_data_t* data){
 
 //calculate packet size: header (3 bytes) + timestamp (8 bytes) + data (num_channels * element_size) + CRC (2 bytes)
 uint16_t daq_get_number_bytes_per_sample(daq_data_t* data){
-    // existing frame + 2 bytes CRC
-    return 3 + 8 + (data->num_channels * data->data->element_size) + 2;
+    return 5 + 8 + (data->num_channels * data->data->element_size);
 }
-//builds the data packet and sends it over USB. 
+
+ 
 void daq_send_data_sample(daq_data_t* data){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_sample(data);
@@ -78,7 +78,6 @@ void daq_send_data_sample(daq_data_t* data){
         buffer[2+idx] = (uint8_t)runtime;
         runtime >>= 8;
     };
-    
     // Data Frame
     uint16_t data_process = 0;
     size_t smp = 0;
@@ -89,20 +88,18 @@ void daq_send_data_sample(daq_data_t* data){
         };
         smp++;
     };
-    // End Frame
+    // End Frame (CRC + tail)
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
-    //stores the low byte of the CRC value in the third-to-last position of the buffer
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
-    //Shifts the CRC value right by 8 bits to get the high byte and stores it in the second-to-last position of the buffer
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
-    //End marker
     buffer[frame_size-1] = 0xFF;
     usb_send_bytes(buffer, sizeof(buffer));
 };
 
 
+//calculate packet size: header (3 bytes) + timestamp (8 bytes) + data (num_channels * element_size) + CRC (2 bytes)
 uint16_t daq_get_number_bytes_per_batch(daq_data_t* data){
-    return 3 + 2*8 + (data->data->length * data->data->element_size);
+    return 5 + 2*8 + (data->data->length * data->data->element_size);
 }
 
 
@@ -124,7 +121,6 @@ void daq_send_data_batch(daq_data_t* data){
         buffer[10+idx] = (uint8_t)runtime;
         runtime >>= 8;
     };
-
     // Data Frame
     uint16_t data_process = 0;
     size_t smp = 0;
@@ -137,7 +133,7 @@ void daq_send_data_batch(daq_data_t* data){
     };
     // End Frame
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
-    buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
+     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
     buffer[frame_size-1] = 0xFF;
     usb_send_bytes(buffer, sizeof(buffer));
