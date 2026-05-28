@@ -51,7 +51,7 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 ## Sensor Libraries
 - [x] Environmeont Sensor: SHT21
-- [x] Environment Sensor: SHT41
+- [ ] Environment Sensor: SHT41 (WIP)
 - [x] Accelerator: ADXL345
 - [x] Accelerator and Gyroscope: BMI270
 - [x] Light: VEML7700

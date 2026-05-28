@@ -1,7 +1,7 @@
 #include "hal/daq/daq.h"
 #include "hal/usb/usb.h"
 #include "hal/helper/helper.h"
-#include "hal/crc/crc.h"
+#include "hal/helper/crc.h"
 #include <stdlib.h>
 
 //==================== CALLABLE FUNCS ====================//
