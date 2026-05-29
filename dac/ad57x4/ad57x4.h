@@ -7,11 +7,6 @@
 
 // More informations on: https://www.analog.com/media/en/technical-documentation/data-sheets/ad5724_5734_5754.pdf
 // ================================= DEFINITIONS =================================
-#define AD57x4_REG_DATA     0x00
-#define AD57x4_REG_RANGE    0x01
-#define AD57x4_REG_PWR      0x02
-#define AD57x4_REG_CNTRL    0x03
-
 #define AD57x4_ADR_DAC0     0x00
 #define AD57x4_ADR_DAC1     0x01
 #define AD57x4_ADR_DAC2     0x02
