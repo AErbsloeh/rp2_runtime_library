@@ -1,5 +1,5 @@
 #include "hal/daq/daq.h"
-#include "hal/usb/usb.h"
+#include "hal/transport/transport.h"
 #include "hal/helper/helper.h"
 #include "hal/helper/crc.h"
 #include <stdlib.h>
@@ -64,7 +64,9 @@ uint16_t daq_get_number_bytes_per_sample(daq_data_t* data){
     return 5 + 8 + (data->num_channels * data->data->element_size);
 }
 
- 
+
+// TODO: Replace direct transport_write() dependency with a DAQ write callback
+// to keep hal_daq independent from the selected transport backend.
 void daq_send_data_sample(daq_data_t* data){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_sample(data);
@@ -93,7 +95,7 @@ void daq_send_data_sample(daq_data_t* data){
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
     buffer[frame_size-1] = 0xFF;
-    usb_send_bytes(buffer, sizeof(buffer));
+    transport_write(buffer, sizeof(buffer));
 };
 
 
@@ -102,7 +104,8 @@ uint16_t daq_get_number_bytes_per_batch(daq_data_t* data){
     return 5 + 2*8 + (data->data->length * data->data->element_size);
 }
 
-
+// TODO: Replace direct transport_write() dependency with a DAQ write callback
+    // to keep hal_daq independent from the selected transport backend.
 void daq_send_data_batch(daq_data_t* data){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_batch(data);
@@ -136,14 +139,14 @@ void daq_send_data_batch(daq_data_t* data){
      buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
     buffer[frame_size-1] = 0xFF;
-    usb_send_bytes(buffer, sizeof(buffer));
+    transport_write(buffer, sizeof(buffer));
 };
 
 
 bool daq_check_send_data(daq_data_t* data){
     if(data->new_data){
         data->new_data = false;  
-        daq_send_data_usb(data);
+        daq_send_data(data);
         return true;
     } else {
         return false;
@@ -152,7 +155,7 @@ bool daq_check_send_data(daq_data_t* data){
 };
 
 
-void daq_send_data_usb(daq_data_t* data){
+void daq_send_data(daq_data_t* data){
     data->iteration ++;
     if(data->send_batch){
         daq_send_data_batch(data);
