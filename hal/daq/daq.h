@@ -99,12 +99,10 @@ bool daq_is_empty_fifo(daq_data_t* data);
 bool daq_check_send_data(daq_data_t* data);
 
 
-/*! \brief Function to send the DAQ data packet via USB
+/*! \brief Function to send the DAQ data packet via the selected transport
 * \param data           Pointer to the DAQ data packet
-* \param frame_size     Size of the USB frame in bytes
-* \param num_samples    Number of samples to send
 */
-void daq_send_data_usb(daq_data_t* data);
+void daq_send_data(daq_data_t* data);
 
 
 /*! \brief Function for processing the data in th DAQ IRQ
@@ -115,16 +113,16 @@ void daq_send_data_usb(daq_data_t* data);
 bool daq_irq_process(daq_data_t* config, void* data);
 
 
-/*! \brief Function to calculate the number of bytes per sample for USB transmission
+/*! \brief Function to calculate the number of bytes per single-sample DAQ frame
     \param data       Pointer to the DAQ data structure
-    \return           Number of bytes per sample for USB transmission
+    \return           Number of bytes per single-sample DAQ frame
 */
 uint16_t daq_get_number_bytes_per_sample(daq_data_t* data);
 
 
-/*! \brief Function to calculate the number of bytes per batch for USB transmission
+/*! \brief Function to calculate the number of bytes per batch DAQ frame
     \param data       Pointer to the DAQ data structure
-    \return           Number of bytes per batch for USB transmission
+    \return           Number of bytes per batch DAQ frame
 */
 uint16_t daq_get_number_bytes_per_batch(daq_data_t* data);
 

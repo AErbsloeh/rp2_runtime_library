@@ -1,3 +1,10 @@
+message(STATUS "hal_transport available at: ${CMAKE_CURRENT_LIST_FILE}")
+add_library(hal_transport INTERFACE)
+
+target_include_directories(hal_transport INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+)
+
 message(STATUS "hal_transport_usb available at: ${CMAKE_CURRENT_LIST_FILE}")
 add_library(hal_transport_usb INTERFACE)
 
@@ -6,6 +13,7 @@ target_sources(hal_transport_usb INTERFACE
 )
 
 target_link_libraries(hal_transport_usb INTERFACE
+    hal_transport
     hal_usb
 )
 
