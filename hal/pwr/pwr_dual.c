@@ -3,28 +3,18 @@
 
 
 // ============================== ISR ROUTINES ==============================
-void gpio_isr_pwr_dual_monitor(uint gpio, uint32_t events, power_dual_t *config) {
-    /* ADD CODE HERE WITH RIGHT STRUCT HANDLER */  
-    disable_system_power_dual(config);  
-    while(true){
-        sleep_ms(1000);      
-        printf("Power down! Please check!\n");
-    };
+void gpio_isr_pwr_dual_monitor(uint gpio, uint32_t events, power_dual_t *config) { 
+    disable_system_power_dual(config);
 }
 
 
 // ============================== HELP FUNCTIONS ==============================
-bool monitor_system_power_dual_pgd_start(uint8_t pin_pgd, bool enable_callback){
+bool monitor_system_power_dual_pgd_start(uint8_t pin_pgd){
     bool power_not_ready = true;
 
     for(uint16_t idx=0; idx < 10000; idx++){
         sleep_us(10);
-        power_not_ready = gpio_get(pin_pgd);
-    }
-
-    if(!power_not_ready){
-        sleep_ms(1000);
-        gpio_set_irq_enabled(pin_pgd, GPIO_IRQ_EDGE_FALL, true);
+        power_not_ready = !gpio_get(pin_pgd);
     }
     return !power_not_ready;
 }
@@ -44,9 +34,7 @@ bool init_system_power_dual(power_dual_t *config){
         gpio_init(config->pin_pgd);
         gpio_set_dir(config->pin_pgd, GPIO_IN);
         gpio_pull_up(config->pin_pgd);
-        gpio_set_irq_enabled(config->pin_pgd, GPIO_IRQ_EDGE_FALL, true);
     }
-
     config->init_done = true;
     return config->init_done;
 }
@@ -57,22 +45,27 @@ bool enable_system_power_dual(power_dual_t *config){
         init_system_power_dual(config);
     }
     
-    sleep_ms(500);
     gpio_put(config->pin_en_reg, true);
-    sleep_ms(500);
+    sleep_ms(400);
     gpio_put(config->pin_en_ldo, true);
+    sleep_ms(50);
 
     bool state = false;
     if(config->use_pgd){
-        state = monitor_system_power_dual_pgd_start(config->pin_pgd, false);
-        
+        if(gpio_get(config->pin_pgd)){
+            state = false;
+        } else {
+            state = monitor_system_power_dual_pgd_start(config->pin_pgd);
+            if(config->use_pgd_isr){
+                gpio_set_slew_rate(config->pin_pgd, GPIO_SLEW_RATE_FAST);
+                gpio_set_irq_enabled(config->pin_pgd, GPIO_IRQ_EDGE_FALL, true);
+            }
+        }
         if(!state) {
             disable_system_power_dual(config);
         }
-        while(!state){
-            sleep_ms(1000);
-        }
     } else {
+        sleep_ms(350);
         state = true;
     }
     config->state = state;
@@ -81,10 +74,14 @@ bool enable_system_power_dual(power_dual_t *config){
 
 
 bool disable_system_power_dual(power_dual_t *config){
+    if(config->use_pgd_isr){
+        gpio_set_irq_enabled(config->pin_pgd, GPIO_IRQ_EDGE_FALL, false);
+    }
+
     gpio_put(config->pin_en_ldo, false);
-    sleep_ms(10);
+    sleep_ms(100);
     gpio_put(config->pin_en_reg, false);
-    sleep_ms(10);
+    sleep_ms(100);
 
     config->state = false;
     return config->state;

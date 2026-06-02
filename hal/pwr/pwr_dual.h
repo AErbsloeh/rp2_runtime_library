@@ -10,6 +10,7 @@
 *   \param pin_en_reg   uint with GPIO number for enabling the power modules of the DCDC regulator
 *   \param pin_en_ldo   uint with GPIO number for enabling the power modules of the low dropout regulator
 *   \param use_pgd      Boolean for enabling power good feedback and monitor
+*   \param use_pgd_isr  Boolean for enabling the power good feedback interrupt service routine (ISR)
 *   \param pin_pgd      If true, uint with GPIO number for getting power good feedback
 *   \param state        Boolean if power is active and running
 *   \param init_done    Boolean for if power watch is initialized
@@ -18,6 +19,7 @@ typedef struct {
     uint8_t pin_en_reg;
     uint8_t pin_en_ldo;
     bool use_pgd;
+    bool use_pgd_isr;
     uint8_t pin_pgd;
     bool state;
     bool init_done;
