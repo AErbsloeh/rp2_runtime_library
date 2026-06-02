@@ -9,8 +9,16 @@ if(PICO_BOARD MATCHES "_w")
     target_link_libraries(hal_led INTERFACE
         pico_stdlib
 	    hardware_gpio
-		pico_cyw43_arch_none
     )
+    if(PICO_WIFI_TCP_ENABLED OR PICO_WIFI_UDP_ENABLED)
+        target_link_libraries(hal_led INTERFACE
+            pico_cyw43_arch_lwip_poll
+        )
+    else()
+        target_link_libraries(hal_led INTERFACE
+            pico_cyw43_arch_none
+        )
+    endif()
     message(STATUS "Add LED control using CYW43")
     add_definitions(-DLED_CYW43_SUPPORTED)
     target_compile_definitions(hal_led INTERFACE LED_CYW43_SUPPORTED)
