@@ -40,26 +40,27 @@ bool enable_system_power_single(power_single_t *config){
     if(!config->init_done){
         init_system_power_single(config);
     }
+    if(config->use_pgd){
+        if(gpio_get(config->pin_pgd)){
+            return false;
+        }
+    }
     
     gpio_put(config->pin_en, true);
-    sleep_ms(50);
+    sleep_us(10);
 
     bool state = false;
     if(config->use_pgd){
-        if(gpio_get(config->pin_pgd)){
-            state = false;
-        } else {
-            state = monitor_system_power_single_pgd_start(config->pin_pgd);
-            if(config->use_pgd_isr){
-                gpio_set_slew_rate(config->pin_pgd, GPIO_SLEW_RATE_FAST);
-                gpio_set_irq_enabled(config->pin_pgd, GPIO_IRQ_EDGE_FALL, true);
-            }
+        state = monitor_system_power_single_pgd_start(config->pin_pgd);
+        if(config->use_pgd_isr){
+            gpio_set_slew_rate(config->pin_pgd, GPIO_SLEW_RATE_FAST);
+            gpio_set_irq_enabled(config->pin_pgd, GPIO_IRQ_EDGE_FALL, true);
         }
         if(!state) {
             disable_system_power_single(config);
         }
     } else {
-        sleep_ms(350);
+        sleep_ms(400);
         state = true;
     }
     config->state = state;
