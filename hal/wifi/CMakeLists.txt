@@ -6,7 +6,7 @@ if(PICO_WIFI_TCP_ENABLED)
     message(STATUS "Copy lwipopts.h file")
     file(COPY 
         ${CMAKE_CURRENT_SOURCE_DIR}/lwipopts.h
-        DESTINATION ${CMAKE_BINARY_DIR}/..
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
     )
     target_sources(hal_wifi_tcp INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/wifi_tcp.c
@@ -14,12 +14,13 @@ if(PICO_WIFI_TCP_ENABLED)
     target_link_libraries(hal_wifi_tcp INTERFACE
         pico_stdlib
         hardware_gpio
-		pico_cyw43_arch_none
+		pico_cyw43_arch_lwip_poll
     )
 endif()
 
 target_include_directories(hal_wifi_tcp INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # WIFI UDP
@@ -30,7 +31,7 @@ if(PICO_WIFI_UDP_ENABLED)
     message(STATUS "Copy lwipopts.h file")
     file(COPY 
         ${CMAKE_CURRENT_SOURCE_DIR}/lwipopts.h
-        DESTINATION ${CMAKE_BINARY_DIR}/..
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
     )    
     target_sources(hal_wifi_udp INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/wifi_udp.c
@@ -44,4 +45,5 @@ endif()
 
 target_include_directories(hal_wifi_udp INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
