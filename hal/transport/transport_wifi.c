@@ -1,6 +1,8 @@
 #include "hal/transport/transport.h"
 #include "hal/wifi/wifi_tcp.h"
 #include "transport_wifi_config.h"
+#include "pico/stdio_usb.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -77,7 +79,18 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
 {
     stdio_init_all();
 
+    absolute_time_t usb_timeout = make_timeout_time_ms(8000);
+    while (!stdio_usb_connected() && !time_reached(usb_timeout)) {
+        sleep_ms(10);
+    }
+
+    printf("\n[transport_wifi] boot\n");
+    printf("[transport_wifi] start wifi init\n");
+    fflush(stdout);
+
     if (!rx_buffer || rx_buffer->length == 0) {
+        printf("[transport_wifi] invalid rx buffer\n");
+        fflush(stdout);
         return false;
     }
 
@@ -94,7 +107,10 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
     wifi_handler.on_receive = wifi_receive_callback;
     wifi_handler.on_receive_context = rx_buffer;
 
-    return wifi_handler_init(&wifi_handler);
+    bool ok = wifi_handler_init(&wifi_handler);
+    printf("[transport_wifi] wifi init result: %d\n", ok);
+    fflush(stdout);
+    return ok;
 }
 
 bool transport_wait_until_connected(void)
