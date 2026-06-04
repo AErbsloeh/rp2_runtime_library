@@ -7,6 +7,7 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 ## Hardware Abstraction Layer (hal)
 - [x] FIFO sampling buffer (without DMA)
+- [x] FIFO double buffer (without DMA)
 - [ ] FIFO sampling buffer (with DMA)
 - [x] DAQ interface with example
 - [x] RP2-ADC interface
@@ -21,7 +22,8 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 - [x] Pulse Width Modulaton
 - [x] Timer
 - [ ] Bluetooth Stack
-- [ ] Wifi with different data packets like UDP, TCP
+- [x] Wifi (TCP)
+- [ ] Wifi (UDP)
 - [x] LED control of WS2812b (using PIO)
 - [x] Clock Generator with GPIO output (using PIO)
 
