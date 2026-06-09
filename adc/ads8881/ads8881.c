@@ -75,8 +75,8 @@ bool ads8881_init(ads8881_t *handler){
         configure_spi_module(handler->spi_handler, false);
     };
 
-    if(!handler->spi_handler->mode == 0){
-        // ADC SPI Mode is not 0
+    if(handler->spi_handler->mode > 3){
+        // Invalid SPI mode
         handler->init_done = false;
     } else {
         // --- Inif of CONVST pin
