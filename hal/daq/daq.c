@@ -65,8 +65,6 @@ uint16_t daq_get_number_bytes_per_sample(daq_data_t* data){
 }
 
 
-// TODO: Replace direct transport_write() dependency with a DAQ write callback
-// to keep hal_daq independent from the selected transport backend.
 void daq_send_data_sample(daq_data_t* data){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_sample(data);
@@ -104,8 +102,7 @@ uint16_t daq_get_number_bytes_per_batch(daq_data_t* data){
     return 5 + 2*8 + (data->data->length * data->data->element_size);
 }
 
-// TODO: Replace direct transport_write() dependency with a DAQ write callback
-    // to keep hal_daq independent from the selected transport backend.
+
 void daq_send_data_batch(daq_data_t* data){
     const size_t data_format = data->data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_batch(data);
