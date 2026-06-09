@@ -3,6 +3,7 @@
 
 
 #include "hal/spi/spi.h"
+#include <stdint.h>
 
 
 // More informations on: https://www.ti.com/lit/ds/symlink/ads8881.pdf?ts=1738727064904&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FADS8881
@@ -64,5 +65,17 @@ uint32_t ads8881_rqst_data(ads8881_t *handler);
 */
 int ads8881_rqst_data_mode(ads8881_t *handler, uint8_t *data, uint8_t len);
 
+
+/*! \brief Request and decode ADS8881 daisy-chain data without busy indicator.
+ *  \param handler         ADS8881 device handler.
+ *  \param num_adcs_total  Number of ADS8881 devices in the chain.
+ *  \param out             Output array with at least num_adcs_total int32_t elements.
+ *  \return                Number of decoded ADC values, or a negative value on error.
+ */
+int ads8881_daisy_chain_rqst_data_wo_busy(
+    ads8881_t *handler,
+    uint8_t num_adcs_total,
+    int32_t *out
+);
 
 #endif
