@@ -81,13 +81,13 @@ void daq_send_data_sample(daq_data_t* data){
         runtime >>= 8;
     };
     // Data Frame
-    uint16_t data_process = 0;
+    uint8_t data_process[data_format];
     size_t smp = 0;
     while(!daq_is_empty_fifo(data)){
-        daq_pop_data_from_fifo(data, &data_process);
-        for(uint8_t idx = 0; idx < data_format; idx++){
-            buffer[10 + (smp * data_format) + idx] = (uint8_t)(data_process >> (8*idx));
-        };
+        daq_pop_data_from_fifo(data, data_process);
+        for(size_t idx = 0; idx < data_format; idx++){
+            buffer[10 + (smp * data_format) + idx] = data_process[idx];
+        }
         smp++;
     };
     // End Frame (CRC + tail)
@@ -125,13 +125,13 @@ void daq_send_data_batch(daq_data_t* data){
         runtime >>= 8;
     };
     // Data Frame
-    uint16_t data_process = 0;
+    uint8_t data_process[data_format];
     size_t smp = 0;
     while(!daq_is_empty_fifo(data)){
-        daq_pop_data_from_fifo(data, &data_process);
-        for(uint8_t idx = 0; idx < data_format; idx++){
-            buffer[18 + (smp * data_format) + idx] = (uint8_t)(data_process >> (8*idx));
-        };
+        daq_pop_data_from_fifo(data, data_process);
+        for(size_t idx = 0; idx < data_format; idx++){
+            buffer[18 + (smp * data_format) + idx] = data_process[idx];
+        }
         smp++;
     };
     // End Frame
