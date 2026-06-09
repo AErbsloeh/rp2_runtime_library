@@ -1,6 +1,59 @@
 #include "adc/ads8881/ads8881.h"
 #include "hardware/gpio.h"
 
+// =========================== INTERNAL DAISY CHAIN FUNCTIONS ===========================
+#define ADS8881_DAISY_CHAIN_BITS_PER_ADC 18u
+#define ADS8881_DAISY_CHAIN_MAX_RX_BYTES 256u
+
+static int32_t ads8881_read_signed_bits(const uint8_t *buf, size_t bit_position, uint8_t width) {
+    uint32_t v = 0;
+
+    for (uint8_t k = 0; k < width; k++) {
+        size_t pos = bit_position + k;
+        size_t byte_index = pos / 8;
+        uint8_t bit_index = 7 - (pos % 8);
+
+        v = (v << 1) | ((buf[byte_index] >> bit_index) & 1u);
+    }
+
+    v &= (width == 32) ? 0xFFFFFFFFu : ((1u << width) - 1u);
+
+    return ((int32_t)(v << (32 - width))) >> (32 - width);
+}
+
+int ads8881_decode_daisy_chain(const uint8_t *buffer_rx, uint8_t num_adcs_total, int32_t *out)
+{
+    if (!buffer_rx || !out || num_adcs_total == 0) {
+        return -1;
+    }
+
+    for (uint8_t i = 0; i < num_adcs_total; i++) {
+        int32_t value = ads8881_read_signed_bits(
+            buffer_rx,
+            (size_t)i * ADS8881_DAISY_CHAIN_BITS_PER_ADC,
+            ADS8881_DAISY_CHAIN_BITS_PER_ADC
+        );
+
+        uint8_t out_idx = num_adcs_total - 1 - i;
+        out[out_idx] = value;
+    }
+
+    return num_adcs_total;
+}
+
+int ads8881_daisy_chain_wo_busy(ads8881_t *handler, uint8_t *buffer_rx, uint8_t len)
+{
+    gpio_put(handler->gpio_num_cnv, 0);
+    sleep_us(1);
+
+    gpio_put(handler->gpio_num_cnv, 1);
+    sleep_us(1);
+
+    int n = spi_read_blocking(handler->spi_handler->spi_mod, 0x00, buffer_rx, len);
+
+    gpio_put(handler->gpio_num_cnv, 0);
+    return n;
+}
 
 // ================================= INTERNAL FUNCTIONS =================================
 uint32_t convert_one_drqst_into_value(uint8_t *data, bool invert){
@@ -75,7 +128,7 @@ bool ads8881_init(ads8881_t *handler){
         configure_spi_module(handler->spi_handler, false);
     };
 
-    if(handler->spi_handler->mode > 3){
+    if(handler->spi_handler->mode > 0){
         // Invalid SPI mode
         handler->init_done = false;
     } else {
@@ -125,4 +178,35 @@ uint32_t ads8881_rqst_data(ads8881_t *handler){
         ads8881_rqst_data_mode(handler, data, 3);
         return convert_one_drqst_into_value(data, handler->invert_out);
     }
+}
+
+
+int ads8881_daisy_chain_rqst_data_wo_busy(
+    ads8881_t *handler,
+    uint8_t num_adcs_total,
+    int32_t *out
+) {
+    if (!handler || !out || num_adcs_total == 0) {
+        return -1;
+    }
+
+    if (!handler->init_done && !ads8881_init(handler)) {
+        return -2;
+    }
+
+    size_t total_bits = (size_t)num_adcs_total * ADS8881_DAISY_CHAIN_BITS_PER_ADC;
+    size_t total_bytes = (total_bits + 7u) / 8u;
+
+    if (total_bytes > ADS8881_DAISY_CHAIN_MAX_RX_BYTES) {
+        return -3;
+    }
+
+    uint8_t buffer_rx[ADS8881_DAISY_CHAIN_MAX_RX_BYTES] = {0};
+
+    int n = ads8881_daisy_chain_wo_busy(handler, buffer_rx, (uint8_t)total_bytes);
+    if (n != (int)total_bytes) {
+        return -4;
+    }
+
+    return ads8881_decode_daisy_chain(buffer_rx, num_adcs_total, out);
 }
