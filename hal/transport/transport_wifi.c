@@ -83,13 +83,9 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
     while (!stdio_usb_connected() && !time_reached(usb_timeout)) {
         sleep_ms(10);
     }
-
-    printf("\n[transport_wifi] boot\n");
-    printf("[transport_wifi] start wifi init\n");
     fflush(stdout);
 
     if (!rx_buffer || rx_buffer->length == 0) {
-        printf("[transport_wifi] invalid rx buffer\n");
         fflush(stdout);
         return false;
     }
@@ -108,7 +104,6 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
     wifi_handler.on_receive_context = rx_buffer;
 
     bool ok = wifi_handler_init(&wifi_handler);
-    printf("[transport_wifi] wifi init result: %d\n", ok);
     fflush(stdout);
     return ok;
 }
@@ -135,7 +130,6 @@ void transport_poll_rx(transport_rx_buffer_t *rx_buffer)
     uint8_t byte = 0;
     while (rx_queue_pop(&byte)) {
         transport_push_rx_byte(rx_buffer, byte);
-
         if (rx_buffer->ready) {
             break;
         }

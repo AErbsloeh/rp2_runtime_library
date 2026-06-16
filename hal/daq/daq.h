@@ -6,6 +6,11 @@
 #include "hal/daq/fifo.h"
 
 
+#define DAQ_MODE_SAMPLE         0x00
+#define DAQ_MODE_BUFFER_SINGLE  0x01
+#define DAQ_MODE_BUFFER_DOUBLE  0x02
+
+
 /*! \brief Data structure for DAQ sampling data packet
     \param num_channels     Number of channels sampled
     \param num_samples      Number of samples taken
@@ -14,8 +19,10 @@
     \param runtime_first    Runtime of the first sample in microseconds since system start
     \param runtime_last     Runtime of the last sample in microseconds since system start
     \param is_signed        Flag to indicate if the sampled data is signed
-    \param send_batch       Flag to indicate if data should be sent batch-wise (true) or sample-wise (false)
+    \param element_size     Number of bytes of the used data type
+    \param send_mode        Flag to indicate the DAQ mode (using defines DAQ_MODE_*)
     \param new_data         Flag to indicate if new data is available in the FIFO
+    \param first_buffer_full    Boolean to indicate that first buffer is ready for transmitting
     \param data             Sampled data value from channels
 */
 typedef struct {
@@ -25,10 +32,13 @@ typedef struct {
     uint8_t volatile iteration;
     uint64_t volatile runtime_first;
     uint64_t volatile runtime_last;
-    bool volatile is_signed;
-    bool volatile send_batch;
+    bool const is_signed;
+    uint8_t const element_size;
+    uint8_t volatile send_mode;
     bool volatile new_data;
-    fifo_t* data;
+    bool volatile first_buffer_full;
+    fifo_t* data0;
+    fifo_t* data1;
 } daq_data_t;
 
 
@@ -86,8 +96,8 @@ bool daq_is_fifo_full(daq_data_t* data);
 
 
 /*! \brief Function to check if the DAQ FIFO is empty
-* \param data           Pointer to the DAQ data structure
-* \return               true if the FIFO is empty, false otherwise
+* \param data               Pointer to the DAQ data structure
+* \return                   true if the FIFO is empty, false otherwise
 */
 bool daq_is_empty_fifo(daq_data_t* data);
 
