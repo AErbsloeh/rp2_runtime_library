@@ -6,9 +6,8 @@ int main() {
     stdio_init_all();
 
     // --- DAQ Sampling
-    fifo_t daq_fifo = {
-        .element_size = sizeof(uint16_t)
-    };
+    fifo_t fifo_a = {};
+    fifo_t fifo_b = {};
     daq_data_t daq_sample_data = {
         .packet_id = 0xA0,
         .iteration = 0,
@@ -16,9 +15,12 @@ int main() {
         .runtime_last = 0,
         .num_channels = 2,
         .num_samples = 64,
-        .data = &daq_fifo,
-        .send_batch = false,
-        .new_data = false
+        .signed = false,
+        .element_size = sizeof(uint16_t)
+        .send_batch = DAQ_MODE_SAMPLE,
+        .new_data = false,
+        .data0 = &fifo_a,
+        .data1 = &fifo_b
     };
     uint16_t daq_data[2] = {0, 0};
     bool irq_tmr_daq0(repeating_timer_t *rt){
@@ -37,7 +39,6 @@ int main() {
         .func_irq = irq_tmr_daq0
     };
 
-    fifo_init(&my_fifo);
     uint8_t value = 0;
     uint8_t out;
 
