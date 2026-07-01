@@ -1,6 +1,9 @@
 #include "sens/pac193x/pac193x.h"
 #include <stdio.h>
 
+// More details in datasheet (Table 5-1, p.26)
+#define PAC193X_I2C_ADDR_START 0x10
+#define PAC193X_I2C_ADDR_END   0x1F
 
 #define PAC193X_REG_REFRESH     0x00        // 0 bytes
 #define PAC193X_REG_CONTROL     0x01        // 1 byte
@@ -225,7 +228,7 @@ bool pac193x_init(pac193x_t *config){
 }
 
 
-bool pac193x_update_data_register(pac193x_t *config){
+bool pac193x_do_conversion(pac193x_t *config){
     pac193x_send_refresh(config);
     return true;
 }

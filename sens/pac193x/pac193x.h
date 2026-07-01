@@ -5,10 +5,6 @@
 #include "hal/i2c/i2c.h"
 
 
-// More details in datasheet (Table 5-1, p.26)
-#define PAC193X_I2C_ADDR_START 0x10
-#define PAC193X_I2C_ADDR_END   0x1F
-
 #define PAC193X_RATE_1024SPS    0
 #define PAC193X_RATE_256SPS     1
 #define PAC193X_RATE_64SPS      2
@@ -17,7 +13,7 @@
 
 // More Informations in the datasheet at https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/PAC1931-Family-Data-Sheet-DS20005850E.pdf
 /*! \brief Struct for configuring the current sensor module PAC193x from Microchip Technology
-* \param spi                    Pointer to SPI interface
+* \param i2c                    Pointer to I2C interface
 * \param gpio_pwrdwn            Power Down GPIO pin (not used = 255)
 * \param gpio_alert             Alert GPIO pin (not used = 255)
 * \param adr                    I2C address of the sensor
@@ -50,33 +46,6 @@ typedef struct {
 * \return uint8_t with the I2C address (0x10 - 0x1F)
 */
 uint8_t pac193x_get_i2c_address(uint32_t resistor_value);
-
-
-/*! \brief Function for checking the product ID of the PAC193x sensor module
-* \param config Pointer to the configuration struct
-* \return true if product ID is correct (=0x58...0x5B), false otherwise
-*/
-bool pac193x_check_product_id(pac193x_t *config);
-
-
-/*! \brief Function for checking the manufacturer ID of the PAC193x sensor module
-* \param config Pointer to the configuration struct
-* \return true if manufacturer ID is correct (=0x5D), false otherwise
-*/
-bool pac193x_check_manufacturer_id(pac193x_t *config);
-
-
-/*! \brief Function for checking the revision ID of the PAC193x sensor module
-* \param config             Pointer to the configuration struct
-* \return true if revision ID is correct (=0x03), false otherwise
-*/
-bool pac193x_check_revision_id(pac193x_t *config);
-
-/*! \brief Function for getting the number of active channels of the PAC193x sensor module
-* \param config             Pointer to the configuration struct
-* \return uint8_t with number of channels (1-4)
-*/
-uint8_t pac193x_get_number_of_channels(pac193x_t *config);
 
 
 /*! \brief Function for defiing the single shot mode of the PAC193x sensor module
@@ -134,11 +103,11 @@ bool pac193x_polarity_current(pac193x_t *config, bool use_bipoar);
 bool pac193x_init(pac193x_t *config);
 
 
-/*! \brief Function for triggering single conversion event and updating data registers (also in continous process) using the PAC193x sensor module
+/*! \brief Function for triggering single conversion event and updating data registers (also in continuous process) using the PAC193x sensor module
 * \param config             Pointer to the configuration struct
 * \return true if initialization was successful, false otherwise
 */
-bool pac193x_update_data_register(pac193x_t *config);
+bool pac193x_do_conversion(pac193x_t *config);
 
 
 /*! \brief Reading the actual voltage sample at selected channel using PAC193x current sensor module

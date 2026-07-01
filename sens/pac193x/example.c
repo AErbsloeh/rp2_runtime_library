@@ -37,8 +37,11 @@ int main(){
     pac193x_config.adr = pac193x_get_i2c_address(499);
 
     set_state_default_led(true);
-    if(pac193x_init(&pac193x_config)){
+    bool init_done = pac193x_init(&pac193x_config);
+    if(init_done){
         printf("Init PAC193x sensor done\n");
+    } else {
+        printf("Init failed")
     }
 
     uint32_t accumulation_number = 0;
@@ -51,29 +54,30 @@ int main(){
 
     while (true) {  
         sleep_ms(2000);
-        
-        pac193x_update_data_register(&pac193x_config);
-        accumulation_number = pac193x_read_accumulation_number(&pac193x_config);
-        for (uint8_t i = 0; i < pac193x_config.num_channels; i++){
-            voltage[i] = pac193x_read_voltage(&pac193x_config, i);
-            current[i] = pac193x_read_current(&pac193x_config, i);
-            power[i] = pac193x_read_power(&pac193x_config, i);
-            voltage_avg[i] = pac193x_read_voltage_rolling(&pac193x_config, i);
-            current_avg[i] = pac193x_read_current_rolling(&pac193x_config, i);
-            power_acc[i] = pac193x_read_power_accumulated(&pac193x_config, i);
-        }
+        if(init_done){
+            pac193x_do_conversion(&pac193x_config);
+            accumulation_number = pac193x_read_accumulation_number(&pac193x_config);
+            for (uint8_t i = 0; i < pac193x_config.num_channels; i++){
+                voltage[i] = pac193x_read_voltage(&pac193x_config, i);
+                current[i] = pac193x_read_current(&pac193x_config, i);
+                power[i] = pac193x_read_power(&pac193x_config, i);
+                voltage_avg[i] = pac193x_read_voltage_rolling(&pac193x_config, i);
+                current_avg[i] = pac193x_read_current_rolling(&pac193x_config, i);
+                power_acc[i] = pac193x_read_power_accumulated(&pac193x_config, i);
+            }
 
-        printf("===========Data =======\n");
-        printf("Ite #: %d\n", accumulation_number);
-        for (uint8_t i = 0; i < pac193x_config.num_channels; i++){
-            printf("V-CH%d: %d\n", i, voltage[i]);
-            printf("I-CH%d: %d\n", i, current[i]);
-            printf("P-CH%d: %d\n", i, power[i]);
-            printf("V-CH%d-AVG: %d\n", i, voltage_avg[i]);
-            printf("I-CH%d-AVG: %d\n", i, current_avg[i]);
-            printf("P-CH%d-ACC: %llu\n", i, (unsigned long long)power_acc[i]);
-        }
-        toggle_state_default_led();
+            printf("===========Data =======\n");
+            printf("Ite #: %d\n", accumulation_number);
+            for (uint8_t i = 0; i < pac193x_config.num_channels; i++){
+                printf("V-CH%d: %d\n", i, voltage[i]);
+                printf("I-CH%d: %d\n", i, current[i]);
+                printf("P-CH%d: %d\n", i, power[i]);
+                printf("V-CH%d-AVG: %d\n", i, voltage_avg[i]);
+                printf("I-CH%d-AVG: %d\n", i, current_avg[i]);
+                printf("P-CH%d-ACC: %llu\n", i, (unsigned long long)power_acc[i]);
+            }
+            toggle_state_default_led();
+        };
     };
 }
 
