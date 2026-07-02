@@ -14,7 +14,8 @@
 /*! \brief Data structure for DAQ sampling data packet
     \param num_channels     Number of channels sampled
     \param num_samples      Number of samples taken
-    \param packet_id        Identifier for the data packet type
+    \param packet_id        Identifier for the data packet type (head)
+    \param packet_tail      Identifier for the data packet type (tail)
     \param iteration        Iteration count of the sampling
     \param runtime_first    Runtime of the first sample in microseconds since system start
     \param runtime_last     Runtime of the last sample in microseconds since system start
@@ -29,6 +30,7 @@ typedef struct {
     uint16_t const num_channels;
     uint16_t const num_samples;
     uint8_t const packet_id;
+    uint8_t const packet_tail;
     uint8_t volatile iteration;
     uint64_t volatile runtime_first;
     uint64_t volatile runtime_last;

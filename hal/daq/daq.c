@@ -139,7 +139,7 @@ void daq_send_data_sample(daq_data_t* data){
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
-    buffer[frame_size-1] = 0xFF;
+    buffer[frame_size-1] = (uint8_t)(data->packet_tail);
     transport_write(buffer, sizeof(buffer));
 };
 
@@ -182,7 +182,7 @@ void daq_send_data_batch(daq_data_t* data){
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
     buffer[frame_size-2] = (uint8_t)(crc >> 8);
-    buffer[frame_size-1] = 0xFF;
+    buffer[frame_size-1] = (uint8_t)(data->packet_tail);
     transport_write(buffer, sizeof(buffer));
 };
 
