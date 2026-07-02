@@ -44,7 +44,7 @@ bool get_state_default_led(void);
 bool toggle_state_default_led(void);
 
 
-#ifdef USE_WS2812_DEFAULT || LED_KB2040_SUPPORTED
+#if defined(USE_WS2812_DEFAULT) || defined(LED_KB2040_SUPPORTED)
     /*! Function for setting the color of the default LED.
      * @param red: The red component of the color (0-255).
      * @param green: The green component of the color (0-255).

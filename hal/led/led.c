@@ -112,7 +112,7 @@ bool toggle_state_default_led(void){
 };
 
 
-#ifdef USE_WS2812_DEFAULT || LED_KB2040_SUPPORTED
+#if defined(USE_WS2812_DEFAULT) || defined(LED_KB2040_SUPPORTED)
 	void set_color_default_led(uint8_t red, uint8_t green, uint8_t blue){
 		led_rgb[0] = red;
 		led_rgb[1] = green;
