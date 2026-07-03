@@ -58,11 +58,11 @@ int main(){
             pac193x_do_conversion(&pac193x_config);
             accumulation_number = pac193x_read_accumulation_number(&pac193x_config);
             for (uint8_t i = 0; i < pac193x_config.num_channels; i++){
-                voltage[i] = pac193x_read_voltage(&pac193x_config, i);
-                current[i] = pac193x_read_current(&pac193x_config, i);
-                power[i] = pac193x_read_power(&pac193x_config, i);
-                voltage_avg[i] = pac193x_read_voltage_rolling(&pac193x_config, i);
-                current_avg[i] = pac193x_read_current_rolling(&pac193x_config, i);
+                voltage[i] = pac193x_read_voltage_single(&pac193x_config, false, i);
+                current[i] = pac193x_read_current_single(&pac193x_config, false, i);
+                power[i] = pac193x_read_power_single(&pac193x_config, i);
+                voltage_avg[i] = pac193x_read_voltage_single(&pac193x_config, true, i);
+                current_avg[i] = pac193x_read_current_single(&pac193x_config, true, i);
                 power_acc[i] = pac193x_read_power_accumulated(&pac193x_config, i);
             }
 

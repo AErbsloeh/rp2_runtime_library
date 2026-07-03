@@ -81,19 +81,12 @@ bool pac193x_enable_all_channels(pac193x_t *config, bool enable_channels);
 
 
 /*! \brief Function for setting the signal polarity of the voltage measurement using PAC193x sensor module
-* \param config             Pointer to the configuration struct
-* \param use_bipolar        Boolean for setting the polarity for measurement the bus voltage (true = bipolar [-32 ... + 32 V], false = unipolar [0 ... 32 V])
+* \param config                 Pointer to the configuration struct
+* \param use_bipolar_voltage    Boolean for setting the polarity for measurement the bus voltage (true = bipolar [-32 ... + 32 V], false = unipolar [0 ... 32 V])
+* \param use_bipolar_current    Boolean for setting the polarity for measurement the bus current (true = bipolar [-32 ... + 32 V], false = unipolar [0 ... 32 V])
 * \return true if set successfully, false otherwise
 */
-bool pac193x_polarity_voltage(pac193x_t *config, bool use_bipolar);
-
-
-/*! \brief Function for setting the signal polarity of the current measurement using PAC193x sensor module
-* \param config             Pointer to the configuration struct
-* \param use_bipolar        Boolean for setting the polarity for measurement the current flow (true = bipolar [-100 ... + 100 mV], false = unipolar [0 ... 100 mV])
-* \return true if set successfully, false otherwise
-*/
-bool pac193x_polarity_current(pac193x_t *config, bool use_bipoar);
+bool pac193x_set_polarity(pac193x_t *config, bool use_bipolar_current, bool use_bipolar_voltage);
 
 
 /*! \brief Initialize the PAC193x sensor module
@@ -112,42 +105,54 @@ bool pac193x_do_conversion(pac193x_t *config);
 
 /*! \brief Reading the actual voltage sample at selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
+* \param take_rolling       Boolean if values should rolling mean of the 8 last samples or direct
 * \param channel            Channel to read (0-3)
-* \return uint16_t with voltage reading with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
+* \return uint16_t with voltage reading, scaling factor (unipolar = +32 V / 2 ** 16 bit = 488.28 µV/LSB, bipolar = +/- 32 V / 2 ** 15 bit = 976.563 µV/LSB)
 */
-uint16_t pac193x_read_voltage(pac193x_t *config, uint8_t channel);
+uint16_t pac193x_read_voltage_single(pac193x_t *config, bool take_rolling, uint8_t channel);
 
 
-/*! \brief Reading the voltage sample (mean of rolling 8) at selected channel using PAC193x current sensor module
+/*! \brief Reading the voltage sample at all channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
-* \param channel            Channel to read (0-3)
-* \return uint16_t with voltage read-out with scaling factor of 0.488 mV/LSB (unipolar = +32 V / 2 ** 16 bit, bipolar = +/- 32 V / 2 ** 15 bit)
+* \param take_rolling       Boolean if values should rolling mean of the 8 last samples or only actual sample
+* \param channel            Pointer to data array to feed-in the results, with scaling factor (unipolar = +32 V / 2 ** 16 bit = 488.28 µV/LSB, bipolar = +/- 32 V / 2 ** 15 bit = 976.563 µV/LSB)
+* \return                   Boolean if data is valid
 */
-uint16_t pac193x_read_voltage_rolling(pac193x_t *config, uint8_t channel);
+bool pac193x_read_voltage_all(pac193x_t *config, bool take_rolling, uint16_t *data);
 
 
-/*! \brief Reading the actual current flow sample of selected channel using PAC193x current sensor module
+/*! \brief Reading the current flow sample of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
+* \param take_rolling       Boolean if values should rolling mean of the 8 last samples or only actual sample
 * \param channel            Channel to read (0-3)
-* \return uint16_t with voltage read-out with scaling factor of 1.53 µV/(LSB * R_sh) (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
+* \return uint16_t with voltage read-out, scaling factor (unipolar = +100 mV / 2 ** 16 bit / R_sh = 1.53 µV/(LSB * R_sh), bipolar = +/- 100 mV / 2 ** 15 bit = 3.06 µV/(LSB * R_sh))
 */
-uint16_t pac193x_read_current(pac193x_t *config, uint8_t channel);
+uint16_t pac193x_read_current_single(pac193x_t *config, bool take_rolling, uint8_t channel);
 
 
-/*! \brief Reading the current flow (mean of rolling 8) of selected channel using PAC193x current sensor module
+/*! \brief Reading the current flow sample at all channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
-* \param channel            Channel to read (0-3)
-* \return uint16_t with voltage read-out with scaling factor of 1.53 µV/(LSB * R_sh) (unipolar = +100 mV / 2 ** 16 bit, bipolar = +/- 100 mV / 2 ** 15 bit)
+* \param take_rolling       Boolean if values should rolling mean of the 8 last samples or only actual sample
+* \param channel            Pointer to data array to feed-in the results, with scaling factor (unipolar = +100 mV / 2 ** 16 bit / R_sh = 1.53 µV/(LSB * R_sh), bipolar = +/- 100 mV / 2 ** 15 bit = 3.06 µV/(LSB * R_sh))
+* \return                   Boolean if data is valid
 */
-uint16_t pac193x_read_current_rolling(pac193x_t *config, uint8_t channel);
+bool pac193x_read_current_all(pac193x_t *config, bool take_rolling, uint16_t *data);
 
 
 /*! \brief Reading the actual power sample of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return uint32_t with digital value from power read-out (need scaling)
+* \return uint32_t with digital power read-out, scaling factor (unipolar = +3.2 V^2 / 2 ** 32 bit / R_sh = 0.74664 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 31 bit / R_sh = 1.49328 nV^2/(LSB * R_sh))
 */
-uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel);
+uint32_t pac193x_read_power_single(pac193x_t *config, uint8_t channel);
+
+
+/*! \brief Reading the power sample at all channel using PAC193x current sensor module
+* \param config             Pointer to the configuration struct
+* \param data               Pointer to data array to feed-in the results, with scaling factor (unipolar = +3.2 V^2 / 2 ** 32 bit / R_sh = 0.74664 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 31 bit / R_sh = 1.49328 nV^2/(LSB * R_sh))
+* \return                   Boolean if data is valid
+*/
+bool pac193x_read_power_all(pac193x_t *config, uint32_t *data);
 
 
 /*! \brief Reading the actual power consumption (accumulated) of selected channel using PAC193x current sensor module
@@ -155,7 +160,7 @@ uint32_t pac193x_read_power(pac193x_t *config, uint8_t channel);
 * \param channel            Channel to read (0-3)
 * \return uint48_t with running/ accumulate digital value from power measurement (need scaling and divison with numbers)
 */
-uint64_t pac193x_read_power_accumulated(pac193x_t *config, uint8_t channel);
+uint64_t pac193x_read_power_accumulated_single(pac193x_t *config, uint8_t channel);
 
 
 /*! \brief Reading the accumulation number from conversion using PAC193x current sensor module
