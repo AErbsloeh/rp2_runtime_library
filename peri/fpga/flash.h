@@ -1,5 +1,5 @@
-#ifndef FLASH_FPGA_H_
-#define FLASH_FPGA_H_
+#ifndef FPGA_FLASH_H_
+#define FPGA_FLASH_H_
 
 
 /* TODO
@@ -85,21 +85,21 @@ typedef struct{
     uint16_t page_size;
     uint16_t block_size;
     flash_data_t flash_data;
-} flash_fpga_t;
+} fpga_flash_t;
 
 
 /*! \brief Function for configuring all GPIOs and SPI for flashing the FPGA flash
 * \param config         Pointer to device struct
 * \return               Bool if configuration is done
 */
-bool fpga_program_init(flash_fpga_t *config);
+bool fpga_program_init(fpga_flash_t *config);
 
 
 /*! \brief Function for resetting the FPGA in order to flash the FPGA flash
 * \param config         Pointer to device struct
 * \return               Bool if reset was successful
 */
-bool fpga_program_reset_do(flash_fpga_t *config);
+bool fpga_program_reset_do(fpga_flash_t *config);
 
 
 /*! \brief Function for setting the programming state of the FPGA
@@ -107,49 +107,49 @@ bool fpga_program_reset_do(flash_fpga_t *config);
 * \param do_reset       Boolean if reset sequence should be done or not
 * \return               Bool if flash device is active connected from MCU
 */
-bool fpga_program_do(flash_fpga_t *config, bool do_reset);
+bool fpga_program_do(fpga_flash_t *config, bool do_reset);
 
 
 /*! \brief Function for checking if the FPGA flash process is done programming
 * \param config         Pointer to device struct
 * \return               Bool if FPGA is done programming
 */
-bool fpga_program_check_done(flash_fpga_t *config);
+bool fpga_program_check_done(fpga_flash_t *config);
 
 
 /*! \brief Function for getting the status register of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the status register
 */
-uint16_t flash_get_status_register(flash_fpga_t *config);
+uint16_t flash_get_status_register(fpga_flash_t *config);
 
 
 /*! \brief Function for getting the Device/Manufacturer ID of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the ID register
 */
-uint16_t flash_get_device_id(flash_fpga_t *config);
+uint16_t flash_get_device_id(fpga_flash_t *config);
 
 
 /*! \brief Function for getting the JEDEC ID of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the JEDEC ID register
 */
-uint16_t flash_get_jedec_id(flash_fpga_t *config);
+uint16_t flash_get_jedec_id(fpga_flash_t *config);
 
 
 /*! \brief Function for getting the Manufacturer ID of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the Manufacturer ID register
 */
-uint8_t flash_get_manufacturer_id(flash_fpga_t *config);
+uint8_t flash_get_manufacturer_id(fpga_flash_t *config);
 
 
 /*! \brief Function for getting the Device/Manufacturer ID of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the ID register
 */
-uint16_t flash_get_device_id(flash_fpga_t *config);
+uint16_t flash_get_device_id(fpga_flash_t *config);
 
 
 /*! \brief Function for sending data to the FPGA flash
@@ -159,14 +159,14 @@ uint16_t flash_get_device_id(flash_fpga_t *config);
 * \param data_len       Length of the data buffer in bytes
 * \return               Bool if sending was successful
 */
-bool flash_write_data(flash_fpga_t *config, uint32_t start_address, uint8_t* data, size_t data_len);
+bool flash_write_data(fpga_flash_t *config, uint32_t start_address, uint8_t* data, size_t data_len);
 
 
 /*! \brief Function for sending data to the FPGA flash
 * \param config         Pointer to device struct
 * \return               Bool if sending was successful
 */
-bool flash_write_data_from_buffer(flash_fpga_t *config);
+bool flash_write_data_from_buffer(fpga_flash_t *config);
 
 
 /*! \brief Function for sending data to the FPGA directly
@@ -176,14 +176,14 @@ bool flash_write_data_from_buffer(flash_fpga_t *config);
 * \param data_len       Length of the data buffer in bytes
 * \return               Bool if sending was successful
 */
-bool flash_read_data(flash_fpga_t *config, uint32_t start_address, uint8_t* data, size_t data_len);
+bool flash_read_data(fpga_flash_t *config, uint32_t start_address, uint8_t* data, size_t data_len);
 
 
 /*! \brief Function for sending data to the FPGA directly
 * \param config         Pointer to device struct
 * \return               Bool if sending was successful
 */
-bool flash_read_data_from_buffer(flash_fpga_t *config);
+bool flash_read_data_from_buffer(fpga_flash_t *config);
 
 
 /*! \brief Function for erasing the selected sector inside the FPGA flash (complete process)
@@ -191,21 +191,21 @@ bool flash_read_data_from_buffer(flash_fpga_t *config);
 * \param start_address  Integer with the byte-wise start address of the flash
 * \return               Bool if erasing was successful
 */
-bool flash_erasing_sector_complete(flash_fpga_t *config, uint32_t start_address);
+bool flash_erasing_sector_complete(fpga_flash_t *config, uint32_t start_address);
 
 
 /*! \brief Function for erasing the whole FPGA flash content (complete process)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool flash_erasing_all_complete(flash_fpga_t *config);
+bool flash_erasing_all_complete(fpga_flash_t *config);
 
 
 /*! \brief Function for erasing the whole FPGA flash content (start process)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool flash_erasing_all_start(flash_fpga_t *config);
+bool flash_erasing_all_start(fpga_flash_t *config);
 
 
 /*! \brief Function for erasing the selected sector inside the FPGA flash (start process)
@@ -213,21 +213,21 @@ bool flash_erasing_all_start(flash_fpga_t *config);
 * \param start_address  Integer with the byte-wise start address of the flash
 * \return               Bool if erasing was successful
 */
-bool flash_erasing_sector_start(flash_fpga_t *config, uint32_t start_address);
+bool flash_erasing_sector_start(fpga_flash_t *config, uint32_t start_address);
 
 
 /*! \brief Function for checking if the FPGA flash erasing process is done
 * \param config         Pointer to device struct
 * \return               Bool if erasing is done
 */
-bool flash_erasing_is_done(flash_fpga_t *config);
+bool flash_erasing_is_done(fpga_flash_t *config);
 
 
 /*! \brief Function for erasing the whole FPGA flash (end process)
 * \param config         Pointer to device struct
 * \return               Bool if erasing was successful
 */
-bool flash_erasing_stop(flash_fpga_t *config);
+bool flash_erasing_stop(fpga_flash_t *config);
 
 
 #endif

@@ -2,4 +2,4 @@
 **/.vscode
 **/build
 .DS_Store
-**/pico_clock.pio.h
+**/pio_clock.pio.h
