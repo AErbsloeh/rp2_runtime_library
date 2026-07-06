@@ -142,14 +142,14 @@ bool pac193x_read_current_all(pac193x_t *config, bool take_rolling, uint16_t *da
 /*! \brief Reading the actual power sample of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return uint32_t with digital power read-out, scaling factor (unipolar = +3.2 V^2 / 2 ** 32 bit / R_sh = 0.74664 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 31 bit / R_sh = 1.49328 nV^2/(LSB * R_sh))
+* \return uint32_t with digital power read-out (only 28-bit are valid) and scaling factor (unipolar = +3.2 V^2 / 2 ** 28 bit / R_sh = 11.921 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 27 bit / R_sh = 23.842 nV^2/(LSB * R_sh))
 */
 uint32_t pac193x_read_power_single(pac193x_t *config, uint8_t channel);
 
 
 /*! \brief Reading the power sample at all channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
-* \param data               Pointer to data array to feed-in the results, with scaling factor (unipolar = +3.2 V^2 / 2 ** 32 bit / R_sh = 0.74664 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 31 bit / R_sh = 1.49328 nV^2/(LSB * R_sh))
+* \param data               Pointer to data array to feed-in the results, with digital power read-out (only 28-bit are valid) and scaling factor (unipolar = +3.2 V^2 / 2 ** 28 bit / R_sh = 11.921 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 27 bit / R_sh = 23.842 nV^2/(LSB * R_sh))
 * \return                   Boolean if data is valid
 */
 bool pac193x_read_power_all(pac193x_t *config, uint32_t *data);
@@ -158,9 +158,17 @@ bool pac193x_read_power_all(pac193x_t *config, uint32_t *data);
 /*! \brief Reading the actual power consumption (accumulated) of selected channel using PAC193x current sensor module
 * \param config             Pointer to the configuration struct
 * \param channel            Channel to read (0-3)
-* \return uint48_t with running/ accumulate digital value from power measurement (need scaling and divison with numbers)
+* \return uint48_t with running/ accumulate digital value from power measurement (needs divison with numbers and scaling factor (unipolar = +3.2 V^2 / 2 ** 28 bit / R_sh = 11.921 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 27 bit / R_sh = 23.842 nV^2/(LSB * R_sh))
 */
 uint64_t pac193x_read_power_accumulated_single(pac193x_t *config, uint8_t channel);
+
+
+/*! \brief Reading the accumulated power consumption of all channel using PAC193x current sensor module
+* \param config             Pointer to the configuration struct
+* \param data               Pointer to data array (only 48-bits are valid, needs number of iterations and scaling factor: (unipolar = +3.2 V^2 / 2 ** 28 bit / R_sh = 11.921 nV^2/(LSB * R_sh), bipolar = +/- 3.2 V^2 / 2 ** 27 bit / R_sh = 23.842 nV^2/(LSB * R_sh))
+* \return                   Boolean if return is valid
+*/
+bool pac193x_read_power_accumulated_all(pac193x_t *config, uint64_t *data);
 
 
 /*! \brief Reading the accumulation number from conversion using PAC193x current sensor module

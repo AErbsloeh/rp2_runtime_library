@@ -239,9 +239,10 @@ uint16_t pac193x_read_data_single(pac193x_t *config, uint8_t reg){
     uint8_t data_tx[1] = {reg};
     uint8_t data_rx[2] = {0x00};
     if(pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, sizeof(data_rx))){
-        return (data_rx[0] << 8) | (data_rx[1] << 0);
+        return ((uint16_t)data_rx[0] << 8) | ((uint16_t)data_rx[1] << 0);
+    } else {
+        return 0;
     }
-    return 0;
 }
 
 
@@ -255,7 +256,7 @@ bool pac193x_read_data_all_channels(pac193x_t *config, uint8_t reg_start, uint16
 
     for(size_t idx = 0; idx < config->num_channels; idx ++){
         if(state) {
-            data[idx] = (data_rx[2*idx] << 8) | (data_rx[2*idx+1] << 0);
+            data[idx] = ((uint16_t)data_rx[2*idx] << 8) | ((uint16_t)data_rx[2*idx+1] << 0);
         } else {
             data[idx] = 0;
         }
@@ -305,9 +306,10 @@ uint32_t pac193x_read_power_single(pac193x_t *config, uint8_t channel){
 
     uint8_t data_rx[4] = {0x00};
     if(pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, sizeof(data_rx))){
-        return (data_rx[0] << 20) | (data_rx[1] << 12) | (data_rx[2] << 4) | (data_rx[3] >> 4);
+        return ((uint32_t)data_rx[0] << 20) | ((uint32_t)data_rx[1] << 12) | ((uint32_t)data_rx[2] << 4) | ((uint32_t)data_rx[3] >> 4);
+    } else {
+        return 0;
     }
-    return 0;
 }
 
 
@@ -321,7 +323,7 @@ bool pac193x_read_power_all(pac193x_t *config, uint32_t *data){
 
     for(size_t idx = 0; idx < config->num_channels; idx ++){
         if(state) {
-            data[idx] = (data_rx[4*idx+0] << 20) | (data_rx[4*idx+1] << 12) | (data_rx[4*idx+2] << 4) | (data_rx[4*idx+3] >> 4);
+            data[idx] = ((uint32_t)data_rx[4*idx+0] << 20) | ((uint32_t)data_rx[4*idx+1] << 12) | ((uint32_t)data_rx[4*idx+2] << 4) | ((uint32_t)data_rx[4*idx+3] >> 4);
         } else {
             data[idx] = 0;
         }
@@ -330,7 +332,7 @@ bool pac193x_read_power_all(pac193x_t *config, uint32_t *data){
 }
 
 
-uint64_t pac193x_read_power_accumulated(pac193x_t *config, uint8_t channel){
+uint64_t pac193x_read_power_accumulated_single(pac193x_t *config, uint8_t channel){
     if(!config->init_done)
         return 0;
 
@@ -339,19 +341,44 @@ uint64_t pac193x_read_power_accumulated(pac193x_t *config, uint8_t channel){
 
     uint8_t data_rx[6] = {0x00};
     if(pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, sizeof(data_rx))){
-        return ((uint64_t)data_rx[0] << 40) | ((uint64_t)data_rx[1] << 32) | ((uint64_t)data_rx[2] << 24) | ((uint64_t)data_rx[3] << 16) | ((uint64_t)data_rx[4] << 8) | (data_rx[5] << 0);
+        return ((uint64_t)data_rx[0] << 40) | ((uint64_t)data_rx[1] << 32) | ((uint64_t)data_rx[2] << 24) | ((uint64_t)data_rx[3] << 16) | ((uint64_t)data_rx[4] << 8) | ((uint64_t)data_rx[5] << 0);
+    } else {
+        return 0;
     }
-    return 0;
+}
+
+
+bool pac193x_read_power_accumulated_all(pac193x_t *config, uint64_t *data){
+    if(!config->init_done)
+        return 0;
+
+    uint8_t data_tx[1] = {0x00};
+    data_tx[0] = PAC193X_REG_VPOWER_ACC;
+    uint8_t data_rx[24] = {0x00};
+    bool state = pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, 6 * config->num_channels);
+
+    for(size_t idx = 0; idx < config->num_channels; idx ++){
+        if(state) {
+            data[idx] = ((uint64_t)data_rx[6*idx+0] << 40) | ((uint64_t)data_rx[6*idx+1] << 32) | ((uint64_t)data_rx[6*idx+2] << 24) | ((uint64_t)data_rx[6*idx+3] << 16) | ((uint64_t)data_rx[6*idx+4] << 8) | ((uint64_t)data_rx[6*idx+5] << 0);
+        } else {
+            data[idx] = 0;
+        }
+    }
+    return state;
 }
 
 
 uint32_t pac193x_read_accumulation_number(pac193x_t *config){
+    if(!config->init_done)
+        return 0;
+
     uint8_t data_tx[1] = {0x00};
     data_tx[0] = PAC193X_REG_ACC_CNT;
 
     uint8_t data_rx[3] = {0x00};
     if(pac193x_i2c_read(config, data_tx, sizeof(data_tx), data_rx, sizeof(data_rx))){
-        return (data_rx[0] << 16) | (data_rx[1] << 8) | (data_rx[2] << 0);
+        return ((uint32_t)data_rx[0] << 16) | ((uint32_t)data_rx[1] << 8) | ((uint32_t)data_rx[2] << 0);
+    } else {
+        return 0;
     }
-    return 0;
 }
