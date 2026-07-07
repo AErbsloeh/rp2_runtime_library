@@ -41,6 +41,11 @@ bool pac193x_send_refresh(pac193x_t *config){
 
 
 // ======================= CALLABLE FUNCS =======================
+void pac193x_wait(void){
+    sleep_us(600);
+}
+
+
 uint8_t pac193x_get_i2c_address(uint32_t resistor_value){
     if (resistor_value <= 250)
         return PAC193X_I2C_ADDR_START + 0x00;    // GND (0 Ohm) -> Default
@@ -191,7 +196,10 @@ bool pac193x_init(pac193x_t *config){
         gpio_init(config->gpio_pwrdwn);
         gpio_set_dir(config->gpio_pwrdwn, GPIO_OUT);
         gpio_pull_up(config->gpio_pwrdwn);
+        gpio_put(config->gpio_pwrdwn, false);
+        sleep_us(1000);
         gpio_put(config->gpio_pwrdwn, true);
+        sleep_us(1000);
     }
     if(config->gpio_alert != 255){
         gpio_init(config->gpio_alert);
@@ -199,31 +207,31 @@ bool pac193x_init(pac193x_t *config){
         gpio_pull_up(config->gpio_alert);
         gpio_put(config->gpio_alert, false);
     }
-
     if(!config->i2c->init_done){
         init_i2c_module(config->i2c);
     }
 
     config->init_done = false; 
-    if(config->adr < PAC193X_I2C_ADDR_START || config->adr > PAC193X_I2C_ADDR_END){
+    if((config->adr == 0) || (config->adr < PAC193X_I2C_ADDR_START) || (config->adr > PAC193X_I2C_ADDR_END)){
         return false;
     }
     if(!check_i2c_bus_for_device_specific(config->i2c, config->adr)){
         return false;
     }
-    if(config->num_channels == 0){
-        config->num_channels = pac193x_get_number_of_channels(config);
-    }
-    config->init_done = pac193x_check_product_id(config) && pac193x_check_manufacturer_id(config);
-    if(!config->init_done) {
+    if(!pac193x_check_product_id(config)) {
         return false;
+    } else {
+        bool state = true;
+        state &= pac193x_set_polarity(config, config->enable_bipolar_current, config->enable_bipolar_voltage);
+        pac193x_wait();
+        state &= pac193x_set_sampling_rate(config, config->sample_rate);
+        pac193x_wait();
+        state &= pac193x_enable_all_channels(config, config->enable_channels);
+        pac193x_wait();
+        config->init_done = state;
+        return config->init_done;
     }
-
-    // Send to control register (all params will be set)
-    pac193x_set_polarity(config, config->enable_bipolar_current, config->enable_bipolar_voltage);
-    pac193x_set_sampling_rate(config, config->sample_rate);
-    pac193x_enable_all_channels(config, config->enable_channels);
-    return config->init_done;
+    return true;
 }
 
 

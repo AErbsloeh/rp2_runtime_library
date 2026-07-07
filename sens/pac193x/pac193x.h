@@ -41,6 +41,12 @@ typedef struct {
     bool init_done;
 } pac193x_t;
 
+
+/*! \brief Function for waiting after sending a refresh command before make a new request to the PAC193x sensor
+*/
+void pac193x_wait(void);
+
+
 /*! \brief Function for getting the I2C address of the PAC193x sensor module (More details in datasheet [Table 5-1, p.26])
 * \param resistor_value Value of the resistor connected to the ADR pin (0=GND, ..., 65535 = VDD)
 * \return uint8_t with the I2C address (0x10 - 0x1F)
