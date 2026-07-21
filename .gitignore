@@ -3,3 +3,4 @@
 **/build
 .DS_Store
 **/pio_clock.pio.h
+**/ad4858_cmos.pio.h

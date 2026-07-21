@@ -5,7 +5,7 @@
 #include "hardware/pio.h"
 
 
-/*! \brief Funciton for initialising and starting a PIO function for generaing a CLK signal on defined PIN
+/*! \brief Function for initialising and starting a PIO function for generating a CLK signal on defined PIN
     \param pio          PIO module
     \param pin          GPIO number for CLK generation
     \param freq         Frequency value of generated CLK signal in Hz

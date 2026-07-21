@@ -21,7 +21,7 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 - [x] Pulse Width Modulaton
 - [x] Timer
 - [ ] Bluetooth Stack
-- [ ] Wifi with different data packets like UDP, TCP
+- [x] Wifi with different data packets like UDP
 - [x] LED control of WS2812b (using PIO)
 - [x] Clock Generator with GPIO output (using PIO)
 
@@ -29,7 +29,7 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 ## Device Libraries
 - [x] ADC ADS8881
 - [x] ADC AD7779
-- [ ] ADC AD4858 (WIP)
+- [x] ADC AD4858 (basic and CMOS interface)
 - [x] DAC AD57x4
 - [x] DAC AD5765
 - [x] DAC LTC2668
@@ -51,7 +51,6 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 ## Sensor Libraries
 - [x] Environmeont Sensor: SHT21
-- [ ] Environment Sensor: SHT41 (WIP)
 - [x] Accelerator: ADXL345
 - [x] Accelerator and Gyroscope: BMI270
 - [x] Light: VEML7700
