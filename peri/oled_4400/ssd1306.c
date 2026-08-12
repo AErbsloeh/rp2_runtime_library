@@ -1,7 +1,5 @@
-#include "peri/oled_4440/ssd1306.h"
-#include "peri/oled_4440/ssd1306_font.h"
-#include <stdlib.h>
-#include <string.h>
+#include "peri/oled_4400/ssd1306.h"
+#include "peri/oled_4400/ssd1306_font.h"
 #include <ctype.h>
 
 
@@ -42,6 +40,11 @@
 
 
 // ======================= INTERNAL HELPER FUNCTIONS =======================
+static inline int ssd1306_abs(int v) {
+    return v < 0 ? -v : v;
+}
+
+
 bool ssd1306_write(ssd1306_t* config, uint8_t *data, size_t data_len) {
     return construct_i2c_write_data(config->i2c_mod, SSD1306_I2C_ADR, data, data_len);
 }
@@ -59,7 +62,7 @@ bool ssd1306_init(ssd1306_t* config) {
     }
     if(!check_i2c_bus_for_device_specific(config->i2c_mod, SSD1306_I2C_ADR)) {
         config->init_done = false;
-        return false;        
+        return false;
     }
 
     uint8_t cmds[] = {
@@ -133,17 +136,16 @@ void ssd1306_send_buffer(ssd1306_t* config, uint8_t buf[], int buflen) {
     // in horizontal addressing mode, the column address pointer auto-increments
     // and then wraps around to the next page, so we can send the entire frame
     // buffer in one gooooooo!
-    // copy our frame buffer into a new buffer because we need to add the control byte
-    // to the beginning
-
-    uint8_t *temp_buf = malloc(buflen + 1);
+    // static buffer sized for the largest possible render area (the whole
+    // display) - avoids malloc/free on every single render call
+    static uint8_t temp_buf[SSD1306_BUF_LEN + 1];
 
     temp_buf[0] = 0x40;
-    memcpy(temp_buf+1, buf, buflen);
+    for (int i = 0; i < buflen; i++) {
+        temp_buf[i + 1] = buf[i];
+    }
 
     ssd1306_write(config, temp_buf, buflen + 1);
-
-    free(temp_buf);
 }
 
 
@@ -181,7 +183,9 @@ void ssd1306_render(ssd1306_t* config, uint8_t *buf, render_area_t *area) {
 
 
 void ssd1306_set_pixel(uint8_t* buf, int x, int y, bool on) {
-    assert(x >= 0 && x < SSD1306_WIDTH && y >=0 && y < SSD1306_HEIGHT);
+    if (x < 0 || x >= SSD1306_WIDTH || y < 0 || y >= SSD1306_HEIGHT) {
+        return;
+    }
 
     // The calculation to determine the correct bit to set depends on which address
     // mode we are in. This code assumes horizontal
@@ -209,9 +213,9 @@ void ssd1306_set_pixel(uint8_t* buf, int x, int y, bool on) {
 
 void ssd1306_draw_line(uint8_t* buf, int x0, int y0, int x1, int y1, bool on) {
 
-    int dx =  abs(x1-x0);
+    int dx =  ssd1306_abs(x1-x0);
     int sx = x0<x1 ? 1 : -1;
-    int dy = -abs(y1-y0);
+    int dy = -ssd1306_abs(y1-y0);
     int sy = y0<y1 ? 1 : -1;
     int err = dx+dy;
     int e2;
