@@ -370,7 +370,7 @@ bool flash_erasing_sector_complete(fpga_flash_t *config, uint32_t start_address)
 bool flash_erasing_all_complete(fpga_flash_t *config){
     flash_erasing_all_start(config);
     do {
-        sleep_us(10);
+        sleep_ms(100);
     } while (!flash_erasing_is_done(config));
     return flash_erasing_stop(config);
 }
@@ -437,7 +437,6 @@ bool flash_erasing_is_done(fpga_flash_t *config){
 
 bool flash_erasing_stop(fpga_flash_t *config) {
     flash_program_write_disable(config);
-
     sleep_us(1);
     return flash_program_spi_disable(config);
 }
