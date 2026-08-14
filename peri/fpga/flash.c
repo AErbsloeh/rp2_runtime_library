@@ -260,12 +260,17 @@ uint16_t flash_get_jedec_id(fpga_flash_t *config){
 
 
 bool flash_set_power_down(fpga_flash_t *config, bool enable){
-    uint8_t cmd[1] = (enable) ? {FLASH_INS_EN_POWERDOWN} : {FLASH_INS_DIS_POWERDOWN};
+    uint8_t cmd[1] = {0x00};
+    if (enable) {
+        cmd[0] = FLASH_INS_EN_POWERDOWN;
+    } else {
+        cmd[0] = FLASH_INS_DIS_POWERDOWN;
+    };
     flash_program_spi_enable(config);
 
-    gpio_put(flash_config->gpio_csn, false);
-    spi_write_blocking(flash_config->spi->spi_mod, cmd, sizeof(cmd));
-    gpio_put(flash_config->gpio_csn, true);
+    gpio_put(config->gpio_csn, false);
+    spi_write_blocking(config->spi->spi_mod, cmd, sizeof(cmd));
+    gpio_put(config->gpio_csn, true);
     sleep_us(100);
 
     flash_program_spi_disable(config);
