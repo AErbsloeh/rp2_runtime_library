@@ -138,6 +138,14 @@ uint16_t flash_get_device_id(fpga_flash_t *config);
 uint16_t flash_get_jedec_id(fpga_flash_t *config);
 
 
+/*! \brief Function for setting the power down mode of the FPGA flash
+* \param config         Pointer to device struct
+* \param enable         Mode setting (true = enable Deep Power State, false = disable Deep Power State)
+* \return               State
+*/
+bool flash_set_power_down(fpga_flash_t *config, bool enable);
+
+
 /*! \brief Function for getting the Manufacturer ID of the FPGA flash
 * \param config         Pointer to device struct
 * \return               Integer with the content of the Manufacturer ID register

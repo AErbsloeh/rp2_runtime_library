@@ -17,6 +17,8 @@
 #define FLASH_INS_4READ_FAST        0x0C
 #define FLASH_INS_3WRITE            0x02
 #define FLASH_INS_4WRITE            0x12
+#define FLASH_INS_DIS_POWERDOWN     0xAB
+#define FLASH_INS_EN_POWERDOWN      0xB9
 
 
 // ===================== CALLABLE FUNCS (FLASH DATA) =====================
@@ -146,15 +148,16 @@ bool fpga_program_init(fpga_flash_t *config){
 }
 
 
-bool fpga_program_do(fpga_flash_t *config, bool do_reset){    
-    gpio_put(config->gpio_progb, !do_reset);
-    
+bool fpga_program_do(fpga_flash_t *config, bool do_reset){
     if(do_reset){
+        gpio_put(config->gpio_progb, false);
+        flash_set_power_down(config, false);
         flash_program_spi_enable(config);
         flash_program_write_disable(config);
     } else {
         flash_program_write_disable(config);
         flash_program_spi_disable(config);
+        gpio_put(config->gpio_progb, true);
     }        
     return true;
 }
@@ -253,6 +256,20 @@ uint16_t flash_get_jedec_id(fpga_flash_t *config){
 
     flash_program_spi_disable(config);
     return (data_rx[1] << 8) | data_rx[2];
+}
+
+
+bool flash_set_power_down(fpga_flash_t *config, bool enable){
+    uint8_t cmd[1] = (enable) ? {FLASH_INS_EN_POWERDOWN} : {FLASH_INS_DIS_POWERDOWN};
+    flash_program_spi_enable(config);
+
+    gpio_put(flash_config->gpio_csn, false);
+    spi_write_blocking(flash_config->spi->spi_mod, cmd, sizeof(cmd));
+    gpio_put(flash_config->gpio_csn, true);
+    sleep_us(100);
+
+    flash_program_spi_disable(config);
+    sleep_us(10);
 }
 
 
