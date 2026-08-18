@@ -217,48 +217,46 @@ void ad4858_do_reset(ad4858_t *config){
 
 bool ad4858_init(ad4858_t* config) {
     // --- Init of GPIOs
-    if(config->spi_mod->init_done){
+    if(!config->spi_mod->init_done){
         configure_spi_module(config->spi_mod, false);
     }
 
-    gpio_init(config->gpio_csn);
-    gpio_set_dir(config->gpio_csn, GPIO_OUT);
-    gpio_put(config->gpio_csn, true);
+gpio_init(config->gpio_csn);
+gpio_set_dir(config->gpio_csn, GPIO_OUT);
+gpio_put(config->gpio_csn, true);
 
-    if(config->gpio_pwr_dwn != 255){
-        gpio_init(config->gpio_pwr_dwn);
-        gpio_set_dir(config->gpio_pwr_dwn, GPIO_OUT);
-        gpio_put(config->gpio_pwr_dwn, true);
+if(config->gpio_pwr_dwn != 255){
+    gpio_init(config->gpio_pwr_dwn);
+    gpio_set_dir(config->gpio_pwr_dwn, GPIO_OUT);
+    gpio_put(config->gpio_pwr_dwn, true);
+}
+
+// --- Init of the device
+ad4858_do_reset(config);
+sleep_us(2000);
+
+ad4858_set_power_mode(config, true);
+sleep_us(500);
+
+ad4858_set_4_wire(config, config->use_4wire_spi);
+if(ad4858_get_product_id(config) == 0x0060){
+    ad4858_enable_streaming_mode(config, false);
+    ad4858_control_crc(config, config->enable_crc);
+    ad4858_set_spi_output_on_sdo0(config, false);
+    ad4858_enable_reference_buffer(config, config->use_ref_buffer);
+    ad4858_set_reference_source(config, config->use_ext_ref);
+    ad4858_enable_spi_sclk_echo(config, true);
+    ad4858_enable_cmos_testpattern(config, false);
+    ad4858_set_packet_size(config, AD4858_PACKETSIZE_24BIT);
+    ad4858_set_oversampling_ratio(config, config->osr_ratio);
+    ad4858_enable_seamless_hdr_mode(config, config->use_seamless_hdr);
+
+    for(uint8_t i = 0; i < NUM_CHANNELS; i++){
+        ad4858_set_softspan(config, i, config->softspan_level);
+        ad4858_set_channel_into_sleep(config, i, false);
     }
-
-    // --- Init of the device
-    ad4858_set_power_mode(config, true);
-    sleep_us(500);
-
-    ad4858_set_4_wire(config, config->use_4wire_spi);
-    if(ad4858_get_product_id(config) == 0x0060){
-        ad4858_do_reset(config);
-        sleep_us(1000);
-
-        ad4858_set_4_wire(config, config->use_4wire_spi);
-        ad4858_enable_streaming_mode(config, false);
-        ad4858_control_crc(config, config->enable_crc);
-        ad4858_set_spi_output_on_sdo0(config, false);
-        ad4858_enable_reference_buffer(config, config->use_ref_buffer);
-        ad4858_set_reference_source(config, config->use_ext_ref);
-        ad4858_enable_spi_sclk_echo(config, true);
-        ad4858_enable_cmos_testpattern(config, false);
-        ad4858_set_packet_size(config, AD4858_PACKETSIZE_24BIT);
-        ad4858_set_oversampling_ratio(config, config->osr_ratio);
-        ad4858_enable_seamless_hdr_mode(config, config->use_seamless_hdr);
-
-        for(uint8_t i = 0; i < NUM_CHANNELS; i++){
-            ad4858_set_softspan(config, i, config->softspan_level);
-            ad4858_set_channel_into_sleep(config, i, false);
-        }
-        config->init_done = true;
-    } else {
-        config->init_done = false;
-    }   
-    return config->init_done;
-};
+    config->init_done = true;
+} else {
+    config->init_done = false;
+}
+return config->init_done;
