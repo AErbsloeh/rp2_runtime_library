@@ -3,6 +3,7 @@
 #include "hal/helper/helper.h"
 #include "hal/helper/crc.h"
 #include <stdlib.h>
+#include <string.h>
 #include "pico/sync.h"
 
 
@@ -28,32 +29,46 @@ static inline void daq_lock_exit(uint32_t state){
     }
 }
 
-// TODO: Check structure for double_buffer
+
 //==================== CALLABLE FUNCS ====================//
 bool daq_init_sampling(tmr_repeat_irq_t* handler, daq_data_t* data){
+    if(data == NULL){
+        return false;
+    }
     daq_lock_init();
     uint32_t lock_state = daq_lock_enter();
-    size_t num_samples = 0;
-    if(data->send_mode == DAQ_MODE_SAMPLE) {
-        num_samples = 1;
+    bool init_done = true;
+
+    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        if(data->ping_pong == NULL){
+            data->ping_pong = calloc(1, sizeof(*data->ping_pong));
+        }
+        if(data->ping_pong != NULL){
+            const size_t bytes_per_sample = (size_t)data->num_channels * data->element_size;
+            init_done = ping_pong_buffer_init(data->ping_pong, data->num_samples, bytes_per_sample);
+        } else {
+            init_done = false;
+        }
     } else {
-        num_samples = data->num_samples;
-    };
-
-    data->data0->element_size = data->element_size;
-    data->data0->length = num_samples * data->num_channels;
-    fifo_init(data->data0);
-
-    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE)  {
-        data->data1->element_size = data->element_size;
-        data->data1->length = num_samples * data->num_channels;
-        fifo_init(data->data1);
+        if(data->fifo == NULL){
+            data->fifo = calloc(1, sizeof(*data->fifo));
+        }
+        if(data->fifo != NULL){
+            const size_t num_samples = (data->send_mode == DAQ_MODE_SAMPLE) ? 1 : data->num_samples;
+            if(data->fifo->queue.data != NULL){
+                queue_free(&data->fifo->queue);
+            }
+            data->fifo->element_size = data->element_size;
+            data->fifo->length = num_samples * data->num_channels;
+            fifo_init(data->fifo);
+        } else {
+            init_done = false;
+        }
     }
 
     data->new_data = false;
-    data->first_buffer_full = false;
     daq_lock_exit(lock_state);
-    return init_timer_irq(handler);
+    return init_done && init_timer_irq(handler);
 };
 
 
@@ -82,54 +97,48 @@ bool daq_stop_sampling(tmr_repeat_irq_t* handler){
 
 
 bool daq_push_data_to_fifo(daq_data_t* data, void* new_data_in){
-    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE) {
-        if(data->first_buffer_full) {
-            return fifo_push(data->data1, new_data_in);
-        } else {
-            return fifo_push(data->data0, new_data_in);
-        }
-    } else {
-        return fifo_push(data->data0, new_data_in);
+    if(data->fifo == NULL){
+        return false;
     }
+    return fifo_push(data->fifo, new_data_in);
 };
 
 
 bool daq_pop_data_from_fifo(daq_data_t* data, void* data_out){
-    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE) {
-        if(data->first_buffer_full) {
-            return fifo_pop(data->data1, data_out);
-        } else {
-            return fifo_pop(data->data0, data_out);
-        }
-    } else {
-        return fifo_pop(data->data0, data_out);
+    if(data->fifo == NULL){
+        return false;
     }
+    return fifo_pop(data->fifo, data_out);
 };
 
 
 bool daq_is_fifo_full(daq_data_t* data){
-    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE) {
-        if(data->first_buffer_full){
-            return fifo_is_full(data->data1);
-        } else {
-            return fifo_is_full(data->data0);
+    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        // Full if the block for writing is still waiting for being sent (both blocks are used)
+        if(data->ping_pong == NULL){
+            return true;
         }
-    } else {
-        return fifo_is_full(data->data0);
+        return data->ping_pong->blocks[data->ping_pong->write_index & (PING_PONG_NUM_BLOCKS - 1u)].ready;
     }
+    if(data->fifo == NULL){
+        return true;
+    }
+    return fifo_is_full(data->fifo);
 };
 
 
 bool daq_is_empty_fifo(daq_data_t* data){
-    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE) {
-        if(data->first_buffer_full){
-            return fifo_is_empty(data->data1);
-        } else {
-            return fifo_is_empty(data->data0);
+    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        if(data->ping_pong == NULL){
+            return true;
         }
-    } else {
-        return fifo_is_empty(data->data0);
+        const ping_pong_block_t *block_write = &data->ping_pong->blocks[data->ping_pong->write_index & (PING_PONG_NUM_BLOCKS - 1u)];
+        return (ping_pong_buffer_get_read_block(data->ping_pong) == NULL) && (block_write->sample_count == 0);
     }
+    if(data->fifo == NULL){
+        return true;
+    }
+    return fifo_is_empty(data->fifo);
 };
 
 
@@ -218,7 +227,65 @@ void daq_send_data_batch(daq_data_t* data){
 };
 
 
+static bool daq_send_data_ping_pong(daq_data_t *data){
+    if((data == NULL) || (data->ping_pong == NULL)){
+        return false;
+    }
+    const ping_pong_block_t *block = ping_pong_buffer_get_read_block(data->ping_pong);
+    if((block == NULL) || (block->data == NULL) || (block->sample_count != data->num_samples)){
+        return false;
+    }
+
+    const size_t frame_size = daq_get_number_bytes_per_batch(data);
+    const size_t payload_size = (size_t)block->sample_count * data->num_channels * data->element_size;
+    if(payload_size > block->capacity_bytes){
+        return false;
+    }
+    char buffer[frame_size];
+
+    // Header Frame
+    buffer[0] = data->packet_id;
+    buffer[1] = (uint8_t)(data->iteration + 1u);
+    uint64_t runtime = block->timestamp_first;
+    for(uint8_t idx = 0; idx < sizeof(uint64_t); idx++){
+        buffer[2 + idx] = (uint8_t)runtime;
+        runtime >>= 8;
+    }
+    runtime = block->timestamp_last;
+    for(uint8_t idx = 0; idx < sizeof(uint64_t); idx++){
+        buffer[10 + idx] = (uint8_t)runtime;
+        runtime >>= 8;
+    }
+
+    // Data Frame
+    memcpy(&buffer[18], block->data, payload_size);
+
+    // End Frame
+    uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
+    buffer[frame_size - 3] = (uint8_t)(crc & 0xFF);
+    buffer[frame_size - 2] = (uint8_t)(crc >> 8);
+    buffer[frame_size - 1] = (uint8_t)data->packet_tail;
+
+    if(transport_write(buffer, frame_size) != frame_size){
+        return false;
+    }
+    if(!ping_pong_buffer_release_read(data->ping_pong)){
+        return false;
+    }
+    data->iteration++;
+    return true;
+}
+
+
 bool daq_check_send_data(daq_data_t* data){
+    if(data == NULL){
+        return false;
+    }
+
+    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        return daq_send_data_ping_pong(data);
+    }
+
     uint32_t lock_state = daq_lock_enter();
     const bool ready = data->new_data;
     if(ready){
@@ -235,6 +302,10 @@ bool daq_check_send_data(daq_data_t* data){
 
 
 void daq_send_data(daq_data_t* data){
+    if(data->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        daq_send_data_ping_pong(data);
+        return;
+    }
     data->iteration++;
     if(data->send_mode > DAQ_MODE_SAMPLE){
         daq_send_data_batch(data);
@@ -246,6 +317,15 @@ void daq_send_data(daq_data_t* data){
 
 bool daq_irq_process(daq_data_t* config, void* data){
     uint32_t lock_state = daq_lock_enter();
+
+    if(config->send_mode == DAQ_MODE_BUFFER_DOUBLE){
+        if(config->ping_pong != NULL){
+            (void)ping_pong_buffer_push_sample(config->ping_pong, data, get_runtime_ms());
+        }
+        daq_lock_exit(lock_state);
+        return true;
+    }
+
     if(daq_is_empty_fifo(config)){
         config->runtime_first = get_runtime_ms();
     } else {
@@ -258,13 +338,7 @@ bool daq_irq_process(daq_data_t* config, void* data){
         daq_push_data_to_fifo(config, element);
     }
 
-    if(daq_is_fifo_full(config)){
-        config->new_data = true;
-        if(config->send_mode == DAQ_MODE_BUFFER_DOUBLE)
-            config->first_buffer_full = !config->first_buffer_full;
-    } else {
-        config->new_data = false;
-    }
+    config->new_data = daq_is_fifo_full(config);
     daq_lock_exit(lock_state);
     return true;
 }

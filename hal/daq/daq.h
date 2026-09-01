@@ -4,6 +4,7 @@
 
 #include "hal/tmr/tmr.h"
 #include "hal/daq/fifo.h"
+#include "hal/daq/ping_pong_buffer.h"
 
 
 #define DAQ_MODE_SAMPLE         0x00
@@ -37,8 +38,8 @@
                             DAQ_TYPE_EVENT:         Irregular events (e.g. threshold or spike detection), the timestamp is the information
                             DAQ_TYPE_CLASS:         Classification result (label) of a window
     \param new_data         Flag to indicate if new data is available in the FIFO
-    \param first_buffer_full    Boolean to indicate that first buffer is ready for transmitting
-    \param data             Sampled data value from channels
+    \param fifo             Pointer to the FIFO used in sample and single-buffer mode
+    \param ping_pong        Pointer to the ping-pong buffer used in double-buffer mode
 */
 typedef struct {
     uint16_t const num_channels;
@@ -53,9 +54,8 @@ typedef struct {
     uint8_t const data_type;
     uint8_t volatile send_mode;
     bool volatile new_data;
-    bool volatile first_buffer_full;
-    fifo_t* data0;
-    fifo_t* data1;
+    fifo_t* fifo;
+    ping_pong_buffer_t *ping_pong;
 } daq_data_t;
 
 
