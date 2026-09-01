@@ -1,26 +1,47 @@
 #include "pico/stdlib.h"
 #include "hal/daq/daq.h"
 
+#define DAQ_EXAMPLE_NUM_CHANNELS 2u
+#define DAQ_EXAMPLE_NUM_SAMPLES 64u
+#define DAQ_EXAMPLE_BLOCK_BYTES (DAQ_EXAMPLE_NUM_CHANNELS * DAQ_EXAMPLE_NUM_SAMPLES * sizeof(uint16_t))
 
 int main() {
     stdio_init_all();
 
-    // --- DAQ Sampling
+    // --- DAQ sampling with ping pong buffer
+
+    static uint8_t ping_pong_data_a[DAQ_EXAMPLE_BLOCK_BYTES];
+    static uint8_t ping_pong_data_b[DAQ_EXAMPLE_BLOCK_BYTES];
+
+    static ping_pong_buffer_t daq_ping_pong = {
+        .blocks = {
+            {
+                .data = ping_pong_data_a,
+                .capacity_bytes = sizeof(ping_pong_data_a)
+            },
+            {
+                .data = ping_pong_data_b,
+                .capacity_bytes = sizeof(ping_pong_data_b)
+            }
+        }
+    };
+
     fifo_t fifo_a = {};
-    fifo_t fifo_b = {};
+
+    // --- DAQ sampling
     daq_data_t daq_sample_data = {
         .packet_id = 0xA0,
         .iteration = 0,
         .runtime_first = 0,
         .runtime_last = 0,
-        .num_channels = 2,
-        .num_samples = 64,
-        .signed = false,
-        .element_size = sizeof(uint16_t)
-        .send_batch = DAQ_MODE_SAMPLE,
+        .num_channels = DAQ_EXAMPLE_NUM_CHANNELS,
+        .num_samples = DAQ_EXAMPLE_NUM_SAMPLES,
+        .is_signed = false,
+        .element_size = sizeof(uint16_t),
+        .send_mode = DAQ_MODE_BUFFER_DOUBLE,
         .new_data = false,
-        .data0 = &fifo_a,
-        .data1 = &fifo_b
+        .fifo = &fifo_a,
+        .ping_pong = &daq_ping_pong
     };
     uint16_t daq_data[2] = {0, 0};
     bool irq_tmr_daq0(repeating_timer_t *rt){
@@ -42,7 +63,8 @@ int main() {
     uint8_t value = 0;
     uint8_t out;
 
-    daq_start_sampling(&daq_sample_data);
+    daq_init_sampling(&tmr_daq0_hndl, &daq_sample_data);
+    daq_start_sampling(&tmr_daq0_hndl);
 
     while (true) {
         tight_loop_contents();
