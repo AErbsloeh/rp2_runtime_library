@@ -3,28 +3,11 @@
 
 #define DAQ_EXAMPLE_NUM_CHANNELS 2u
 #define DAQ_EXAMPLE_NUM_SAMPLES 64u
-#define DAQ_EXAMPLE_BLOCK_BYTES (DAQ_EXAMPLE_NUM_CHANNELS * DAQ_EXAMPLE_NUM_SAMPLES * sizeof(uint16_t))
 
 int main() {
     stdio_init_all();
 
     // --- DAQ sampling with ping pong buffer
-
-    static uint8_t ping_pong_data_a[DAQ_EXAMPLE_BLOCK_BYTES];
-    static uint8_t ping_pong_data_b[DAQ_EXAMPLE_BLOCK_BYTES];
-
-    static ping_pong_buffer_t daq_ping_pong = {
-        .blocks = {
-            {
-                .data = ping_pong_data_a,
-                .capacity_bytes = sizeof(ping_pong_data_a)
-            },
-            {
-                .data = ping_pong_data_b,
-                .capacity_bytes = sizeof(ping_pong_data_b)
-            }
-        }
-    };
 
     fifo_t fifo_a = {};
 
@@ -41,7 +24,7 @@ int main() {
         .send_mode = DAQ_MODE_BUFFER_DOUBLE,
         .new_data = false,
         .fifo = &fifo_a,
-        .ping_pong = &daq_ping_pong
+        .ping_pong = NULL
     };
     uint16_t daq_data[2] = {0, 0};
     bool irq_tmr_daq0(repeating_timer_t *rt){
@@ -63,7 +46,9 @@ int main() {
     uint8_t value = 0;
     uint8_t out;
 
-    daq_init_sampling(&tmr_daq0_hndl, &daq_sample_data);
+    if (!daq_init_sampling(&tmr_daq0_hndl, &daq_sample_data)) {
+        return 1;
+    }
     daq_start_sampling(&tmr_daq0_hndl);
 
     while (true) {

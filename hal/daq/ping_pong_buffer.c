@@ -1,5 +1,6 @@
 #include "hal/daq/ping_pong_buffer.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static void ping_pong_block_reset(ping_pong_block_t *block) {
@@ -41,6 +42,23 @@ bool ping_pong_buffer_init(
     }
 
     size_t required_capacity = samples_per_block * bytes_per_sample;
+
+    if (buffer->blocks[0].data == NULL && buffer->blocks[1].data == NULL) {
+        if (required_capacity > SIZE_MAX / PING_PONG_NUM_BLOCKS) {
+            return false;
+        }
+
+        uint8_t *storage = malloc(required_capacity * PING_PONG_NUM_BLOCKS);
+
+        if (storage == NULL) {
+            return false;
+        }
+
+        for (uint8_t index = 0; index < PING_PONG_NUM_BLOCKS; index++) {
+            buffer->blocks[index].data = storage + index * required_capacity;
+            buffer->blocks[index].capacity_bytes = required_capacity;
+        }
+    }
 
     for (uint8_t index = 0; index < PING_PONG_NUM_BLOCKS; index++) {
         if (
