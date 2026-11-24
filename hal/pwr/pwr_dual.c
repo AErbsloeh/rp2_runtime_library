@@ -44,14 +44,24 @@ bool enable_system_power_dual(power_dual_t *config){
     if(!config->init_done){
         init_system_power_dual(config);
     }
-    if(config->use_pgd){
-        if(gpio_get(config->pin_pgd)){
-            return false;
-        }
+    if(config->state){
+        return true;
     }
-    
     gpio_put(config->pin_en_reg, true);
-    sleep_ms(400);
+    gpio_put(config->pin_en_ldo, false);
+    if(config->use_pgd){
+        absolute_time_t t_end = make_timeout_time_ms(4000);
+        while(!gpio_get(config->pin_pgd)){
+            if(time_reached(t_end)){
+                disable_system_power_dual(config);
+                return false;
+            }
+        sleep_ms(1);
+        }
+    } else {
+        sleep_ms(400);
+    }
+
     gpio_put(config->pin_en_ldo, true);
     sleep_us(10);
 
