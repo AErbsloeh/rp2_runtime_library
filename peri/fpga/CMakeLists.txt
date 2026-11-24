@@ -23,10 +23,12 @@ add_library(peri_fpga_logic INTERFACE)
 # --- Fetch files ---
 target_sources(peri_fpga_logic INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/logic.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/fpga_spi_shared.c
 )
 
 target_link_libraries(peri_fpga_logic INTERFACE
     pico_stdlib
+    peri_fpga_flash
 	hal_spi
 )
 
