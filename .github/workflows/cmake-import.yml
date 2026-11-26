@@ -1,0 +1,60 @@
+name: CMake import
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  PICO_SDK_VERSION: 2.1.1
+
+jobs:
+  import:
+    name: ${{ matrix.board }} (${{ matrix.source }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { board: pico,     source: local, wifi: OFF }
+          - { board: pico2,    source: local, wifi: OFF }
+          - { board: pico2_w,  source: local, wifi: ON }
+          - { board: pico,     source: fetch, wifi: OFF }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+
+      - name: Cache Pico SDK
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/pico-sdk
+          key: pico-sdk-${{ env.PICO_SDK_VERSION }}
+
+      - name: Get Pico SDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch ${PICO_SDK_VERSION} https://github.com/raspberrypi/pico-sdk.git ~/pico-sdk
+          git -C ~/pico-sdk submodule update --init --depth 1
+
+      - name: Configure
+        run: |
+          EXTRA=""
+          if [ "${{ matrix.source }}" = "fetch" ]; then
+            EXTRA="-DCI_LIBRARY_SOURCE=fetch -DCI_LIBRARY_REPO=file://${GITHUB_WORKSPACE} -DCI_LIBRARY_TAG=${GITHUB_SHA}"
+          fi
+          cmake -S .github/ci -B build -G Ninja \
+            -DPICO_BOARD=${{ matrix.board }} \
+            -DCI_ENABLE_WIFI=${{ matrix.wifi }} \
+            $EXTRA
+        env:
+          PICO_SDK_PATH: /home/runner/pico-sdk
+
+      - name: Build all library targets
+        run: cmake --build build -- -k 0
