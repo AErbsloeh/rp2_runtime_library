@@ -7,9 +7,7 @@
 int main() {
     stdio_init_all();
 
-    // --- DAQ sampling with ping pong buffer
-
-    fifo_t fifo_a = {};
+    // --- DAQ sampling (DAQ_MODE_PINGPONG: two blocks, written and sent alternately)
 
     // --- DAQ sampling
     daq_data_t daq_sample_data = {
@@ -21,10 +19,9 @@ int main() {
         .num_samples = DAQ_EXAMPLE_NUM_SAMPLES,
         .is_signed = false,
         .element_size = sizeof(uint16_t),
-        .send_mode = DAQ_MODE_BUFFER_DOUBLE,
+        .send_mode = DAQ_MODE_PINGPONG,
         .new_data = false,
-        .fifo = &fifo_a,
-        .ping_pong = NULL
+        .buffer = NULL
     };
     uint16_t daq_data[2] = {0, 0};
     bool irq_tmr_daq0(repeating_timer_t *rt){

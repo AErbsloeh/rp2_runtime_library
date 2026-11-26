@@ -3,13 +3,12 @@
 
 
 #include "hal/tmr/tmr.h"
-#include "hal/daq/fifo.h"
-#include "hal/daq/ping_pong_buffer.h"
+#include "hal/daq/daq_buffer.h"
 
 
 #define DAQ_MODE_SAMPLE         0x00
-#define DAQ_MODE_BUFFER_SINGLE  0x01
-#define DAQ_MODE_BUFFER_DOUBLE  0x02
+#define DAQ_MODE_BUFFER         0x01
+#define DAQ_MODE_PINGPONG       0x02
 
 #define DAQ_TYPE_SAMPLE         0x00
 #define DAQ_TYPE_CONT_WINDOW    0x01
@@ -37,9 +36,9 @@
                             DAQ_TYPE_FEATURE:       Features of a window (e.g. mean or RMS), one value or vector for each window
                             DAQ_TYPE_EVENT:         Irregular events (e.g. threshold or spike detection), the timestamp is the information
                             DAQ_TYPE_CLASS:         Classification result (label) of a window
-    \param new_data         Flag to indicate if new data is available in the FIFO
-    \param fifo             Pointer to the FIFO used in sample and single-buffer mode
-    \param ping_pong        Pointer to the ping-pong buffer used in double-buffer mode
+    \param new_data         Flag to indicate if a complete block waits for being sent
+    \param buffer           Pointer to the buffer of the stream, used by all modes (DAQ_MODE_SAMPLE: one sample, DAQ_MODE_BUFFER: one block
+                            of num_samples, DAQ_MODE_PINGPONG: two blocks, written and sent alternately). Can be NULL, daq_init_sampling() creates it
 */
 typedef struct {
     uint16_t const num_channels;
@@ -54,8 +53,7 @@ typedef struct {
     uint8_t const data_type;
     uint8_t volatile send_mode;
     bool volatile new_data;
-    fifo_t* fifo;
-    ping_pong_buffer_t *ping_pong;
+    daq_buffer_t* buffer;
 } daq_data_t;
 
 
@@ -89,32 +87,16 @@ bool daq_start_sampling(tmr_repeat_irq_t* handler);
 bool daq_stop_sampling(tmr_repeat_irq_t* handler);
 
 
-/*! \brief Function to push data to the DAQ FIFO
+/*! \brief Function to check if the DAQ buffer is full: no sample can be written, because all blocks wait for being sent
 * \param data           Pointer to the DAQ data structure
-* \param new_data_in    Pointer to the new data to be pushed
-* \return               true if data was pushed successfully, false otherwise
-*/
-bool daq_push_data_to_fifo(daq_data_t* data, void* new_data_in);
-
-
-/*! \brief Function to pop data from the DAQ FIFO
-* \param data           Pointer to the DAQ data structure
-* \param data_out       Pointer to the buffer where the popped data will be stored
-* \return               true if data was popped successfully, false otherwise
-*/
-bool daq_pop_data_from_fifo(daq_data_t* data, void* data_out);
-
-
-/*! \brief Function to check if the DAQ FIFO is full
-* \param data           Pointer to the DAQ data structure
-* \return               true if the FIFO is full, false otherwise
+* \return               true if the buffer is full, false otherwise
 */
 bool daq_is_fifo_full(daq_data_t* data);
 
 
-/*! \brief Function to check if the DAQ FIFO is empty
+/*! \brief Function to check if the DAQ buffer is empty (no complete block and no sample waiting)
 * \param data               Pointer to the DAQ data structure
-* \return                   true if the FIFO is empty, false otherwise
+* \return                   true if the buffer is empty, false otherwise
 */
 bool daq_is_empty_fifo(daq_data_t* data);
 
