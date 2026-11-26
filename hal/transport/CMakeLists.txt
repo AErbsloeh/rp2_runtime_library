@@ -29,6 +29,7 @@ target_sources(hal_transport_wifi INTERFACE
 )
 
 target_link_libraries(hal_transport_wifi INTERFACE
+    pico_stdio_usb
     hal_transport
     hal_wifi_tcp
 )

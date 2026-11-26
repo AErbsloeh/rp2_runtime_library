@@ -1,4 +1,4 @@
-#include "src/fpga_spi_shared.h"
+#include "peri/fpga/fpga_spi_shared.h"
 
 
 bool fpga_spi_shared_is_ready(fpga_spi_shared_t *bus){
