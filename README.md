@@ -1,4 +1,4 @@
-# pico_runtime_library
+# rp2_runtime_library
 This repo contains source files for different sensor / devices which can be used in Pico/RP2xxx projects.
 For example you can use the corresponding project template using the [Link](https://github.com/AErbsloeh/pico_runtime_example).
 
@@ -8,7 +8,8 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 ## Hardware Abstraction Layer (hal)
 - [x] FIFO sampling buffer (without DMA)
 - [ ] FIFO sampling buffer (with DMA)
-- [x] DAQ interface with example
+- [x] DAQ interface with example (data type per stream, thread-safe for core 1)
+- [x] Processing of DAQ data on core 1 (`hal/daq/processing`, results are sent as own DAQ stream)
 - [x] RP2-ADC interface
 - [x] SPI interface
 - [x] I2C interface
@@ -17,8 +18,11 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 - [x] Clock generating with PIO module
 - [x] Power handling for external devices (with/without feedback)
 - [x] Timer interrupt
+- [x] Setting of the system clock
+- [x] CRC helper functions
+- [x] Transport layer for USB and WiFi (TCP)
 - [x] LED control
-- [x] Pulse Width Modulaton
+- [x] Pulse Width Modulation
 - [x] Timer
 - [ ] Bluetooth Stack
 - [x] Wifi with different data packets like UDP
@@ -42,7 +46,6 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 
 ## Peripherie Devices
-- [x] Ethernet Module CH9121
 - [x] SD card support
 - [ ] Ethernet module W5500 (WIP)
 - [x] FPGA Handler + Flashing (SPI 1x, no bus alignment) for AMD, Lattice and CologneChip FPGAs (WIP)
@@ -50,10 +53,10 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 
 ## Sensor Libraries
-- [x] Environmeont Sensor: SHT21
+- [x] Environment Sensor: SHT21
 - [x] Accelerator: ADXL345
 - [x] Accelerator and Gyroscope: BMI270
 - [x] Light: VEML7700
-- [x] Distance Estimuation: VL6180x
+- [x] Distance Estimation: VL6180x
 - [x] Current Measuring Unit: PAC193X
 - [x] Microphone Amplifier: MAX9814

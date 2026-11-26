@@ -3,10 +3,36 @@
 #include "hal/helper/helper.h"
 #include "hal/helper/crc.h"
 #include <stdlib.h>
+#include "pico/sync.h"
+
+
+// Lock for the DAQ streams: the FIFO of a stream can be filled by another core than the one which sends it
+static spin_lock_t *daq_lock = NULL;
+
+
+static void daq_lock_init(void){
+    if(daq_lock == NULL){
+        daq_lock = spin_lock_init(spin_lock_claim_unused(true));
+    }
+}
+
+
+static inline uint32_t daq_lock_enter(void){
+    return (daq_lock != NULL) ? spin_lock_blocking(daq_lock) : 0;
+}
+
+
+static inline void daq_lock_exit(uint32_t state){
+    if(daq_lock != NULL){
+        spin_unlock(daq_lock, state);
+    }
+}
 
 // TODO: Check structure for double_buffer
 //==================== CALLABLE FUNCS ====================//
 bool daq_init_sampling(tmr_repeat_irq_t* handler, daq_data_t* data){
+    daq_lock_init();
+    uint32_t lock_state = daq_lock_enter();
     size_t num_samples = 0;
     if(data->send_mode == DAQ_MODE_SAMPLE) {
         num_samples = 1;
@@ -26,6 +52,7 @@ bool daq_init_sampling(tmr_repeat_irq_t* handler, daq_data_t* data){
 
     data->new_data = false;
     data->first_buffer_full = false;
+    daq_lock_exit(lock_state);
     return init_timer_irq(handler);
 };
 
@@ -116,8 +143,10 @@ void daq_send_data_sample(daq_data_t* data){
     const size_t data_format = data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_sample(data);
     char buffer[frame_size];
+    const size_t max_elements = data->num_channels;
 
-    // Header Frame
+    // Header Frame and Data Frame (FIFO is locked while it is emptied)
+    uint32_t lock_state = daq_lock_enter();
     buffer[0] = data->packet_id;
     buffer[1] = data->iteration;
     uint64_t runtime = data->runtime_first;
@@ -125,16 +154,16 @@ void daq_send_data_sample(daq_data_t* data){
         buffer[2+idx] = (uint8_t)runtime;
         runtime >>= 8;
     };
-    // Data Frame
     uint8_t data_process[data_format];
     size_t smp = 0;
-    while(!daq_is_empty_fifo(data)){
+    while((smp < max_elements) && !daq_is_empty_fifo(data)){
         daq_pop_data_from_fifo(data, data_process);
         for(size_t idx = 0; idx < data_format; idx++){
             buffer[10 + (smp * data_format) + idx] = data_process[idx];
         }
         smp++;
     };
+    daq_lock_exit(lock_state);
     // End Frame (CRC + tail)
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
@@ -154,8 +183,10 @@ void daq_send_data_batch(daq_data_t* data){
     const size_t data_format = data->element_size;
     const size_t frame_size = daq_get_number_bytes_per_batch(data);
     char buffer[frame_size];
+    const size_t max_elements = (size_t)data->num_channels * data->num_samples;
 
-    // Header Frame
+    // Header Frame and Data Frame (FIFO is locked while it is emptied)
+    uint32_t lock_state = daq_lock_enter();
     buffer[0] = data->packet_id;
     buffer[1] = data->iteration;
     uint64_t runtime = data->runtime_first;
@@ -168,16 +199,16 @@ void daq_send_data_batch(daq_data_t* data){
         buffer[10+idx] = (uint8_t)runtime;
         runtime >>= 8;
     };
-    // Data Frame
     uint8_t data_process[data_format];
     size_t smp = 0;
-    while(!daq_is_empty_fifo(data)){
+    while((smp < max_elements) && !daq_is_empty_fifo(data)){
         daq_pop_data_from_fifo(data, data_process);
         for(size_t idx = 0; idx < data_format; idx++){
             buffer[18 + (smp * data_format) + idx] = data_process[idx];
         }
         smp++;
     };
+    daq_lock_exit(lock_state);
     // End Frame
     uint16_t crc = crc16_ccitt((const uint8_t*)buffer, frame_size - 3);
     buffer[frame_size-3] = (uint8_t)(crc & 0xFF);
@@ -188,14 +219,18 @@ void daq_send_data_batch(daq_data_t* data){
 
 
 bool daq_check_send_data(daq_data_t* data){
-    if(data->new_data){
-        data->new_data = false;  
+    uint32_t lock_state = daq_lock_enter();
+    const bool ready = data->new_data;
+    if(ready){
+        data->new_data = false;
+    }
+    daq_lock_exit(lock_state);
+    if(ready){
         daq_send_data(data);
         return true;
     } else {
         return false;
     }
-    
 };
 
 
@@ -210,6 +245,7 @@ void daq_send_data(daq_data_t* data){
 
 
 bool daq_irq_process(daq_data_t* config, void* data){
+    uint32_t lock_state = daq_lock_enter();
     if(daq_is_empty_fifo(config)){
         config->runtime_first = get_runtime_ms();
     } else {
@@ -229,5 +265,6 @@ bool daq_irq_process(daq_data_t* config, void* data){
     } else {
         config->new_data = false;
     }
+    daq_lock_exit(lock_state);
     return true;
 }

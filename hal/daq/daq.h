@@ -10,6 +10,13 @@
 #define DAQ_MODE_BUFFER_SINGLE  0x01
 #define DAQ_MODE_BUFFER_DOUBLE  0x02
 
+#define DAQ_TYPE_SAMPLE         0x00
+#define DAQ_TYPE_CONT_WINDOW    0x01
+#define DAQ_TYPE_EVENT_WINDOW   0x02
+#define DAQ_TYPE_FEATURE        0x03
+#define DAQ_TYPE_EVENT          0x04
+#define DAQ_TYPE_CLASS          0x05
+
 
 /*! \brief Data structure for DAQ sampling data packet
     \param num_channels     Number of channels sampled
@@ -22,6 +29,13 @@
     \param is_signed        Flag to indicate if the sampled data is signed
     \param element_size     Number of bytes of the used data type
     \param send_mode        Flag to indicate the DAQ mode (using defines DAQ_MODE_*)
+    \param data_type        Kind of the data in the stream (using defines DAQ_TYPE_*), default (not set) is DAQ_TYPE_SAMPLE
+                            DAQ_TYPE_SAMPLE:        Values of single samples with a constant rate (raw data, after filtering or echo)
+                            DAQ_TYPE_CONT_WINDOW:   Windows with a fixed step (one after another or overlapping), continuous and regular in time
+                            DAQ_TYPE_EVENT_WINDOW:  Windows around an event (trigger), irregular in time
+                            DAQ_TYPE_FEATURE:       Features of a window (e.g. mean or RMS), one value or vector for each window
+                            DAQ_TYPE_EVENT:         Irregular events (e.g. threshold or spike detection), the timestamp is the information
+                            DAQ_TYPE_CLASS:         Classification result (label) of a window
     \param new_data         Flag to indicate if new data is available in the FIFO
     \param first_buffer_full    Boolean to indicate that first buffer is ready for transmitting
     \param data             Sampled data value from channels
@@ -36,6 +50,7 @@ typedef struct {
     uint64_t volatile runtime_last;
     bool const is_signed;
     uint8_t const element_size;
+    uint8_t const data_type;
     uint8_t volatile send_mode;
     bool volatile new_data;
     bool volatile first_buffer_full;
@@ -105,6 +120,7 @@ bool daq_is_empty_fifo(daq_data_t* data);
 
 
 /*! \brief Function to check if the DAQ data is ready to be sent
+* The FIFO of a stream is protected by a spinlock, so a stream can be filled by daq_irq_process() on one core and sent by this function on the other core
 * \param data           Pointer to the DAQ data structure
 * \return               true if data is ready to be sent, false otherwise
 */
@@ -117,7 +133,7 @@ bool daq_check_send_data(daq_data_t* data);
 void daq_send_data(daq_data_t* data);
 
 
-/*! \brief Function for processing the data in th DAQ IRQ
+/*! \brief Function for processing the data in th DAQ IRQ (also usable from the other core, the FIFO is protected by a spinlock)
 *   \param config       Pointer to the DAQ config struct
 *   \param data         Pointer to the DAQ data packet
 *   \return             Boolean (always true) for running the Timer IRQ queue

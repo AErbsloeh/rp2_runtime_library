@@ -4,10 +4,12 @@ add_library(hal_daq INTERFACE)
 target_sources(hal_daq INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/daq.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/processing.c
 )
 
 target_link_libraries(hal_daq INTERFACE
 	pico_stdlib
+    pico_multicore
     hal_tmr
     hal_helper
     hal_transport
