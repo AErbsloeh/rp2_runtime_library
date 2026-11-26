@@ -1,4 +1,4 @@
-#include "hal/daq/fifo.h"
+#include "hal/fifo/fifo.h"
 
 
 // ==================== CALLABLE FUNCS ====================//
