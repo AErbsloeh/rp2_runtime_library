@@ -1,12 +1,12 @@
+#include <stdio.h>
 #include "pico/stdlib.h"
-#include "hal/daq/fifo.h"
+#include "hal/fifo/fifo.h"
 
 
 int main() {
     stdio_init_all();
 
     fifo_t my_fifo = {
-        .channel_num = 1,
         .element_size = sizeof(uint8_t),
         .length = 16
     };
@@ -18,7 +18,7 @@ int main() {
     while (true) {
         fifo_push(&my_fifo, &value);
         if (fifo_is_full(&my_fifo)) {
-            printf("Buf@(%d): [", my_fifo.timestamp);
+            printf("Buf: [");
             for(size_t i = 0; i < my_fifo.length; i++){
                 fifo_pop(&my_fifo, &out);
                 printf("%d, ", out);
