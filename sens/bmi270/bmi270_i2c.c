@@ -4,6 +4,9 @@
 #include <stdio.h>
 
 
+#define BMI270_I2C_READ_RETRIES 50
+
+
 // ======================================== INTERNAL READ/WRITE FUNCTIONS ===============================================
 bool BMI270_i2c_write_byte(bmi270_i2c_rp2_t *handler, uint8_t command, uint8_t data){
     uint8_t buffer_tx[2] = {command};
@@ -26,13 +29,17 @@ uint64_t BMI270_i2c_read_data(bmi270_i2c_rp2_t *handler, uint8_t command, uint8_
 
     i2c_write_blocking(handler->i2c_mod->i2c_mod, BMI270_I2C_ADR, buffer_tx, sizeof(buffer_tx), true);
     sleep_us(10);
+    uint8_t attempts = 0;
     while (i2c_read_blocking(handler->i2c_mod->i2c_mod, BMI270_I2C_ADR, buffer_rx, size, false) == PICO_ERROR_GENERIC){
+        if(++attempts >= BMI270_I2C_READ_RETRIES){
+            return 0;
+        }
         sleep_ms(2);
-    }; 
+    }
 
     uint64_t raw_data = 0;
     for(uint8_t idx = 0; idx < size; idx++){
-        raw_data |= buffer_rx[idx] << 8*idx;
+        raw_data |= (uint64_t)buffer_rx[idx] << (8 * idx);
     }
     return raw_data;
 }
@@ -45,7 +52,7 @@ bool BMI270_i2c_read_id(bmi270_i2c_rp2_t *handler, bool print_id){
     if(print_id){
         printf("ID read from BMI270: %x\n", id);
     }    
-    return (id && 0x24);
+    return (id == 0x24);
 };
 
 

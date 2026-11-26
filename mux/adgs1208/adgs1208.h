@@ -10,12 +10,13 @@
 // ================================= DEFINITIONS =================================
 #define ADGS1208_SPI_MODE0 0
 #define ADGS1208_SPI_MODE3 3
+#define ADGS1208_MAX_DEVICES_DC 8
 
 
 /*! \brief Struct handler for configuring the Multiplexer ADGS120X from Analog Devices with SPI interface
 * \param spi_handler    Predefined SPI handler for RP2040
 * \param gpio_num_csn   GPIO Pin for Chip Select
-* \param num_device_dc  Number of devices which are daisy chained (< 1 will be activated)
+* \param num_device_dc  Number of devices which are daisy chained (> 1 activates the daisy chain mode, limited to ADGS1208_MAX_DEVICES_DC)
 * \param use_rstn_hw    Boolean if hardware reset line is used 
 * \param gpio_num_rstn  GPIO Pin for Reset Line (optional)
 * \param init_done      Boolean if device configuration is done        
@@ -58,6 +59,8 @@ bool adgs1208_init(adgs1208_t *config_device);
 
 
 /*! \brief Function for resetting the MUX values 
+* \details Uses the hardware reset line if use_rstn_hw is set, otherwise the software reset sequence is sent to all devices of the chain.
+*          A reset disables the daisy chain mode, therefore adgs1208_init() calls adgs1208_enable_daisy_chain() afterwards.
 * \param config_device  Device handler for using device
 */
 void adgs1208_reset(adgs1208_t *config_device);
@@ -72,7 +75,7 @@ void adgs1208_enable_daisy_chain(adgs1208_t *config_device);
 /*! \brief Function for defining the MUX output 
 * \param config_device  Device handler for using device
 * \param mux_data       Array with data for defining the position [val_0, ..., val_N] and each value is defined with 0: disable, 1: S1, ... 8: S8
-* \return               Boolean if output definition is successful done
+* \return               Boolean if output definition is successful done (false if not initialized or mux_data is NULL)
 */
 bool adgs1208_define_output(adgs1208_t *config_device, const uint8_t *mux_data);
 

@@ -132,7 +132,7 @@ void ad7779_set_sampling_rate_2kSPS(ad7779_t *handler);
 
 /*! \brief Function to initialize the Analog-Digital Converter AD7779 from Analog Devices.
  *  \param handler  Pointer to typedef struct ad7779_t to handle the settings
- *  \return         true if initialization is successful, false otherwise.
+ *  \return         true if initialization is successful, false otherwise (INIT_COMPLETE is polled for about 5 s).
  */
 bool ad7779_init(ad7779_t *handler);
 

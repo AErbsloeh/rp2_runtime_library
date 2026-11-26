@@ -21,6 +21,7 @@ void daq_buffer_reset(daq_buffer_t *buffer){
     }
     buffer->write_index = 0;
     buffer->read_index = 0;
+    buffer->num_dropped = 0;
 }
 
 
@@ -70,7 +71,11 @@ bool daq_buffer_push_sample(daq_buffer_t *buffer, const void *sample, uint64_t t
         return false;
     }
     daq_buffer_block_t *block = &buffer->blocks[buffer->write_index];
-    if(block->ready || (block->data == NULL) || (block->sample_count >= buffer->samples_per_block)){
+    if(block->ready){
+        buffer->num_dropped++;
+        return false;
+    }
+    if((block->data == NULL) || (block->sample_count >= buffer->samples_per_block)){
         return false;
     }
     const size_t offset = (size_t)block->sample_count * buffer->bytes_per_sample;

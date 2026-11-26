@@ -7,6 +7,7 @@
 
 static const processing_config_t *config_active = NULL;
 static bool core1_started = false;
+static bool queues_created = false;
 static queue_t queue_in[PROCESSING_NUM_SOURCES];
 static uint8_t *buffer_in = NULL;
 static uint8_t *buffer_out = NULL;
@@ -25,11 +26,16 @@ static bool shape_is_valid(const processing_shape_t *shape){
 }
 
 
+/*! \brief Checks if the DAQ stream fits to the output layout
+    The stream collects whole blocks: a block has to fit into the buffer of the stream (one sample per packet or a multiple of the block)
+    \param daq       Pointer to the DAQ stream
+    \param shape     Pointer to the layout of the output block
+    \return          true if the stream fits, false otherwise
+*/
 static bool daq_matches_shape(const daq_data_t *daq, const processing_shape_t *shape){
     if((daq == NULL) || (daq->num_channels != shape->num_channels) || (daq->element_size != shape->element_size)){
         return false;
     }
-    // The stream collects whole blocks: a block has to fit into the FIFO of the stream (one sample per packet or a multiple of the block)
     if(daq->send_mode == DAQ_MODE_SAMPLE){
         return shape->num_samples == 1;
     }
@@ -51,6 +57,9 @@ bool processing_init(const processing_config_t *config){
     free(buffer_in);
     free(buffer_out);
     free(buffer_sample);
+    buffer_in = NULL;
+    buffer_out = NULL;
+    buffer_sample = NULL;
     buffer_in = malloc(num_bytes_in);
     buffer_out = malloc(num_bytes_out);
     buffer_sample = malloc(num_bytes_in);
@@ -59,22 +68,28 @@ bool processing_init(const processing_config_t *config){
     }
 
     for(uint8_t src = 0; src < PROCESSING_NUM_SOURCES; src++){
+        if(queues_created){
+            queue_free(&queue_in[src]);
+        }
         queue_init(&queue_in[src], num_bytes_in, config->queue_depth);
         num_dropped_in[src] = 0;
     }
+    queues_created = true;
     num_samples_collected = 0;
     config_active = config;
     return true;
 }
 
 
+/*! \brief Main loop of core 1: takes the blocks of the queues in turns and writes the results into the DAQ stream
+    A block is only taken if the buffer of the DAQ stream is not full, so the result always fits into it
+*/
 static void core1_entry(void){
     const size_t num_bytes_sample = (size_t)config_active->out.num_channels * config_active->out.element_size;
     uint8_t first_src = 0;
     while(true){
         bool idle = true;
-        // Only process a block if the FIFO of the DAQ stream is not full, so the result always fits into it
-        if(!daq_is_fifo_full(config_active->daq_out)){
+        if(!daq_is_buffer_full(config_active->daq_out)){
             for(uint8_t cnt = 0; cnt < PROCESSING_NUM_SOURCES; cnt++){
                 const uint8_t src = (first_src + cnt) % PROCESSING_NUM_SOURCES;
                 if(!queue_try_remove(&queue_in[src], buffer_in)){

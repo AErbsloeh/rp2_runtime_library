@@ -61,20 +61,17 @@ bool ad5141_i2c_reset_software(ad5141_i2c_rp2_t *config)
 
 bool ad5141_i2c_control_shutdown(ad5141_i2c_rp2_t *config, bool enable_rdac0, bool enable_rdac1)
 {
-    uint8_t  buffer[2] = {0};
-    if (enable_rdac0 && !enable_rdac1){
-        buffer[0] = 0xC0;
-        buffer[1] = (enable_rdac0) ? 0x00 : 0x01;
-    } else if (!enable_rdac0 && enable_rdac1){
-        buffer[0] = 0xC1;
-        buffer[1] = (enable_rdac1) ? 0x00 : 0x01;
+    bool done = true;
+    if(enable_rdac0 == enable_rdac1){
+        uint8_t buffer[2] = {0xC8, (enable_rdac0) ? 0x00 : 0x01};
+        done = (i2c_write_blocking(config->i2c_handler->i2c_mod, config->adr, buffer, 2, false) == 2);
     } else {
-        buffer[0] = 0xC8;
-        buffer[1] = (enable_rdac0 && enable_rdac1) ? 0x00 : 0x01;
+        uint8_t buffer_rdac0[2] = {0xC0, (enable_rdac0) ? 0x00 : 0x01};
+        uint8_t buffer_rdac1[2] = {0xC1, (enable_rdac1) ? 0x00 : 0x01};
+        done = (i2c_write_blocking(config->i2c_handler->i2c_mod, config->adr, buffer_rdac0, 2, false) == 2);
+        done = (i2c_write_blocking(config->i2c_handler->i2c_mod, config->adr, buffer_rdac1, 2, false) == 2) && done;
     }
-
-    i2c_write_blocking(config->i2c_handler->i2c_mod, config->adr, buffer, 2, false);
-    return true;
+    return done;
 }
 
 

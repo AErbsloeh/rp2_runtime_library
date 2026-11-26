@@ -7,9 +7,6 @@
 int main() {
     stdio_init_all();
 
-    // --- DAQ sampling (DAQ_MODE_PINGPONG: two blocks, written and sent alternately)
-
-    // --- DAQ sampling
     daq_data_t daq_sample_data = {
         .packet_id = 0xA0,
         .iteration = 0,

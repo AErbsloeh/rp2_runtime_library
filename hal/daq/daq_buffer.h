@@ -39,6 +39,7 @@ typedef struct {
     \param bytes_per_sample   Number of bytes occupied by one complete sample (all channels)
     \param write_index        Index of the block currently used by the producer
     \param read_index         Index of the block currently used by the consumer
+    \param num_dropped        Number of samples which were dropped because all blocks waited for being read (consumer subtracts what it handled)
 */
 typedef struct {
     daq_buffer_block_t blocks[DAQ_BUFFER_MAX_BLOCKS];
@@ -51,6 +52,8 @@ typedef struct {
 
     volatile uint8_t write_index;
     volatile uint8_t read_index;
+
+    volatile uint32_t num_dropped;
 } daq_buffer_t;
 
 
@@ -75,7 +78,7 @@ void daq_buffer_reset(daq_buffer_t *buffer);
     \param buffer     Pointer to the buffer
     \param sample     Pointer to one complete sample
     \param timestamp  Timestamp associated with the sample
-    \return           true if the sample was accepted, false if no block was writable (all blocks wait for being read)
+    \return           true if the sample was accepted, false if no block was writable (all blocks wait for being read, the sample is counted in num_dropped)
 */
 bool daq_buffer_push_sample(daq_buffer_t *buffer, const void *sample, uint64_t timestamp);
 

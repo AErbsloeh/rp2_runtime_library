@@ -18,7 +18,7 @@
 * \param i2c_handler    Predefined I2C handler for RP2040
 * \param model_sel      Adress bits for selecting the right adress
 * \param shutdown       Boolean if device should be shutdown in software
-* \param gpio_state     Uint8_t value for saaving the GPIO state 
+* \param gpio_state     Bit mask of the GPIO outputs (AD528X_GPIO_PIN0 -> O1, AD528X_GPIO_PIN1 -> O2)
 * \param init_done      Boolean if device configuration is done        
 */
 typedef struct{
@@ -49,7 +49,7 @@ bool ad528x_init(ad528x_t *handler);
 
 /*! \brief Function for doing a software reset to midscale
 * \param handler    Device handler for using device
-* \return           Boolean if process is done completely
+* \return           Boolean if the reset command was transmitted (single write of the RS instruction, afterwards the wiper is at midscale)
 */
 bool ad528x_soft_reset(ad528x_t *handler);
 
@@ -68,7 +68,7 @@ bool ad528x_define_shutdown(ad528x_t *handler);
 bool ad528x_define_gpio_output(ad528x_t *handler);
 
 
-/*! \brief Function for doing a software reset to midscale
+/*! \brief Function for setting the wiper position of a channel
 * \param handler    Device handler for using device
 * \param chnnl_b    Selecting the output channel (false: CHA, true: CHB [if available])
 * \param data       Uint8_t value with position of channel

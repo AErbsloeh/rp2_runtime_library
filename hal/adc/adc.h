@@ -30,6 +30,7 @@ typedef struct {
 
 
 /*! \brief Initialize the internal RP2 ADC peripheral
+    With DMA the FIFO of the ADC is used (DMA request after each sample, no error flag, no shift: 12-bit values) and the results are written alternately into two buffers of buffersize samples
     \param config       Pointer to the RP2 ADC configuration structure
     \return             true if initialization was successful, false otherwise
 */
@@ -85,7 +86,7 @@ volatile uint16_t* rp2_adc_get_buffer(rp2_adc_t* config);
 
 
 /*! \brief Getting the size of each ADC data buffer
-    \return size_t with buffersize
+    \return size_t with the number of samples of each buffer (0 if no buffer was created)
 */
 size_t rp2_adc_get_buffersize(void);
 

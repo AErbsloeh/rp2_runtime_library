@@ -119,7 +119,7 @@ void ad4858_set_packet_size(ad4858_t* config, uint8_t packet_size);
 
 /*! \brief Reading the package size used in the ADC AD4858
  *  \param config   Pointer to AD4858 device settings
- *  \return         2-bit configuration to determine the packet size of the data frame
+ *  \return         2-bit configuration to determine the packet size of the data frame (only the packet size bits of the register, see AD4858_PACKETSIZE_*)
  */
 uint8_t ad4858_get_packet_size(ad4858_t* config);
 
@@ -128,6 +128,7 @@ uint8_t ad4858_get_packet_size(ad4858_t* config);
  *  \param config   Pointer to AD4858 device settings
  *  \param channel    ADC channel number (0 to 7)
  *  \param lvl        SoftSpan level (4-bit value according to datasheet range table)
+ *  \note             Channels above 7 are ignored
  */
 void ad4858_set_softspan(ad4858_t* config, uint8_t channel, uint8_t lvl);
 
@@ -137,6 +138,7 @@ void ad4858_set_softspan(ad4858_t* config, uint8_t channel, uint8_t lvl);
  *  \param config   Pointer to AD4858 device settings
  *  \param channel    ADC channel number (0 to 7)
  *  \param go_sleep   Boolean to set the sleep mode (true = sleep, false = active)
+ *  \note             Channels above 7 are ignored
  */
 void ad4858_set_channel_into_sleep(ad4858_t *config, uint8_t channel, bool go_sleep);
 

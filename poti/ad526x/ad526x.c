@@ -52,8 +52,7 @@ bool ad526x_soft_reset(ad526x_t *handler){
 
 
 bool ad526x_define_shutdown(ad526x_t *handler){
-    uint8_t cmd = (handler->shutdown) ? 0x00 : 0x20;
-    return AD526x_write_data(handler, cmd, 0x00);
+    return !handler->shutdown;
 }
 
 

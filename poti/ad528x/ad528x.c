@@ -17,14 +17,12 @@ uint8_t AD528x_get_adress(ad528x_t *handler){
 
 
 uint8_t AD528x_create_command(ad528x_t *handler){
-    return ((handler->shutdown) ? 0x00 : 0x20) | ((handler->gpio_state && AD528X_GPIO_PIN0) << 0x10) | ((handler->gpio_state && AD528X_GPIO_PIN1) << 0x08);
+    return ((handler->shutdown) ? 0x00 : 0x20) | ((handler->gpio_state & AD528X_GPIO_PIN0) ? 0x10 : 0x00) | ((handler->gpio_state & AD528X_GPIO_PIN1) ? 0x08 : 0x00);
 }
 
 
 bool AD528x_write_data(ad528x_t *handler, uint8_t command, uint8_t data){
-    uint8_t buffer_tx[2] = {0x00};
-    buffer_tx[0] = 0x00;
-    buffer_tx[1] = 0x00;
+    uint8_t buffer_tx[2] = {command, data};
 
     return construct_i2c_write_data(handler->i2c_handler, AD528x_get_adress(handler), buffer_tx, 2);    
 }
@@ -46,13 +44,9 @@ bool ad528x_init(ad528x_t *handler){
 
 
 bool ad528x_soft_reset(ad528x_t *handler){
-    for(uint8_t ite=0; ite < 4; ite++){
-        AD528x_write_data(handler, 0x40, 0x00);
-        sleep_us(100);
-        AD528x_write_data(handler, 0x00, 0x00);
-        sleep_us(100);
-    };
-    return true;
+    const bool done = AD528x_write_data(handler, 0x40, 0x00);
+    sleep_us(100);
+    return done;
 }
 
 

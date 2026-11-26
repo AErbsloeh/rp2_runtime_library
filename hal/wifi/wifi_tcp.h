@@ -14,6 +14,14 @@
 typedef void (*wifi_tcp_recv_cb_t)(void *context, const uint8_t *data, size_t len);
 
 
+/*! \brief Callback function for getting the free space of the receiver (flow control)
+ *  A received TCP segment is only handed over if it fits completely, otherwise lwIP keeps it and delivers it again later, so no byte is lost
+ *  \param context Pointer to user-defined callback context
+ *  \return        Number of bytes which the receiver can take
+ */
+typedef size_t (*wifi_tcp_space_cb_t)(void *context);
+
+
 /*! \brief Struct handler for configuring WiFi TCP communication between RP2xxx and host computer
  *  \param init_done          Boolean for initialization state
  *  \param use_dhcp           Boolean for using DHCP instead of static IP configuration
@@ -27,6 +35,7 @@ typedef void (*wifi_tcp_recv_cb_t)(void *context, const uint8_t *data, size_t le
  *  \param gateway            Static IPv4 gateway used when DHCP is disabled
  *  \param on_receive         Callback function for received TCP data
  *  \param on_receive_context User-defined context passed to receive callback
+ *  \param on_receive_space   Optional callback for the free space of the receiver, the space has to be at least TCP_MSS bytes to receive all segments
  */
 typedef struct {
     bool init_done;
@@ -44,6 +53,7 @@ typedef struct {
 
     wifi_tcp_recv_cb_t on_receive;
     void *on_receive_context;
+    wifi_tcp_space_cb_t on_receive_space;
 } wifi_handler_t;
 
 

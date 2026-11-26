@@ -69,9 +69,10 @@ void construct_uart_write_string(uart_rp2_t *handler, const char *s);
 /*! \brief Reads binary data from UART into buffer
  *  \param handler   Pointer to configured uart_rp2_t
  *  \param buffer_rx Pointer to buffer to store received data
- *  \param len_rx    Number of bytes to read from UART
+ *  \param len_rx    Maximum number of bytes to read from UART (only the bytes which are available are read)
+ *  \return           Number of bytes which were read
  */
-void construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx);
+size_t construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx);
 
 
 /*! \brief Checks if UART RX buffer has data to read
@@ -84,10 +85,11 @@ bool is_readable(uart_rp2_t *handler);
 /*! \brief Function for reading string from UART module
  *  \param handler      Pointer to configured uart_rp2_t
  *  \param buffer_rx    Pointer to buffer to store received string
- *  \param len_rx       Maximum length of the string to read
- *  \return             true if data is available to read, false otherwise
+ *  \param len_rx       Size of the buffer, at most len_rx - 1 characters are read (only the characters which are available) and the string is always terminated with '\0'
+ *                      The reading stops at a line break, which is taken from the UART but not stored
+ *  \return             Number of characters of the string (without the terminator)
  */
-void construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx);
+size_t construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx);
 
 
 #endif

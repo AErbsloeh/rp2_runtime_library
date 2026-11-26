@@ -29,6 +29,12 @@
 
 // ================================= FUNCTIONS =================================
 /*! \brief Struct for handling the configuration of the Digital-Analog Converter (DAC) AD57x4 from Analog Devices
+* \param spi_mod        Pointer to the SPI handler
+* \param gpio_num_csn   GPIO number of the chip select line (active low)
+* \param use_gpio_ldac  Boolean for using the load DAC line (active high, the outputs are updated with the falling edge)
+* \param gpio_num_ldac  GPIO number of the load DAC line
+* \param use_gpio_dclr  Boolean for using the data clear line (active low), it is also used for the reset of the device, otherwise the reset is done by the control register
+* \param gpio_num_dclr  GPIO number of the data clear line
 * \param bitwidth   Used data bitwidth of device
 */
 typedef struct {
@@ -62,7 +68,7 @@ static ad57x4_t DEVICE_AD57X4_DEFAULT = {
 
 
 // ================================= FUNCTIONS =================================
-/*! \brief Function for initialising the Digital-Analog Converter AD57x4 from Analog Devices
+/*! \brief Function for initialising the Digital-Analog Converter AD57x4 from Analog Devices (resets the device and writes the power control, control and output range select register)
 * \param config     Struct type for configurating the device
 * \return           Boolean if initialization is done successful
 */

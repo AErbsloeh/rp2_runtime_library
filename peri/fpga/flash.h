@@ -97,7 +97,7 @@ bool fpga_program_init(fpga_flash_t *config);
 
 /*! \brief Function for resetting the FPGA in order to flash the FPGA flash
 * \param config         Pointer to device struct
-* \return               Bool if reset was successful
+* \return               Bool if reset was successful (false if DONE did not go high within 20 s)
 */
 bool fpga_program_reset_do(fpga_flash_t *config);
 
@@ -112,7 +112,7 @@ bool fpga_program_do(fpga_flash_t *config, bool do_reset);
 
 /*! \brief Function for checking if the FPGA flash process is done programming
 * \param config         Pointer to device struct
-* \return               Bool if FPGA is done programming
+* \return               Bool if FPGA is done programming (DONE pin is waited for up to 20 s, without DONE pin a fixed delay of 2 s is used)
 */
 bool fpga_program_check_done(fpga_flash_t *config);
 
@@ -141,7 +141,7 @@ uint16_t flash_get_jedec_id(fpga_flash_t *config);
 /*! \brief Function for setting the power down mode of the FPGA flash
 * \param config         Pointer to device struct
 * \param enable         Mode setting (true = enable Deep Power State, false = disable Deep Power State)
-* \return               State
+* \return               Bool if command was sent
 */
 bool flash_set_power_down(fpga_flash_t *config, bool enable);
 
@@ -165,7 +165,7 @@ uint16_t flash_get_device_id(fpga_flash_t *config);
 * \param start_address  Integer with address to start for writing
 * \param data           Pointer to data buffer to be sent
 * \param data_len       Length of the data buffer in bytes
-* \return               Bool if sending was successful
+* \return               Bool if sending was successful (false if the flash is busy for more than 100 ms after the transfer)
 */
 bool flash_write_data(fpga_flash_t *config, uint32_t start_address, uint8_t* data, size_t data_len);
 
@@ -197,14 +197,14 @@ bool flash_read_data_from_buffer(fpga_flash_t *config);
 /*! \brief Function for erasing the selected sector inside the FPGA flash (complete process)
 * \param config         Pointer to device struct
 * \param start_address  Integer with the byte-wise start address of the flash
-* \return               Bool if erasing was successful
+* \return               Bool if erasing was successful (false after a timeout of 5 s)
 */
 bool flash_erasing_sector_complete(fpga_flash_t *config, uint32_t start_address);
 
 
 /*! \brief Function for erasing the whole FPGA flash content (complete process)
 * \param config         Pointer to device struct
-* \return               Bool if erasing was successful
+* \return               Bool if erasing was successful (false after a timeout of 400 s)
 */
 bool flash_erasing_all_complete(fpga_flash_t *config);
 

@@ -6,6 +6,7 @@
 
 
 /*! \brief Struct for configuring the module for W5500 Ethernet module on board
+* \details The WIZnet callbacks have no context pointer, therefore the config passed to w5500_udp_init() is used for SPI and CS access. Only one W5500 instance is supported.
 * \param spi            Pointer to SPI interface
 * \param gpio_cs        Chip Select GPIO pin
 * \param gpio_rstn      Reset GPIO pin
@@ -62,6 +63,10 @@ bool w5500_udp_init(w5500_udp_t *config);
 
 
 
+/*! \brief Function for checking the PHY link state
+* \param config     Device handler for using device
+* \return           Boolean if the link is up (false if not initialized)
+*/
 bool w5500_udp_phy_connected(w5500_udp_t *config);
 
 

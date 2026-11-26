@@ -6,26 +6,29 @@
 #include <stdio.h>
 
 
+static w5500_udp_t *active_config = NULL;
+
+
 static uint8_t wizchip_read(void) {
     uint8_t rx_data = 0x00;
     uint8_t tx_data = 0xFF;
-    spi_read_blocking(spi0, tx_data, &rx_data, 1);
+    spi_read_blocking(active_config->spi->spi_mod, tx_data, &rx_data, 1);
     return rx_data;
 }
 
 
 static void wizchip_write(uint8_t tx_data) {
-    spi_write_blocking(spi0, &tx_data, 1);
+    spi_write_blocking(active_config->spi->spi_mod, &tx_data, 1);
 }
 
 
 static inline void wizchip_select(void) {
-    gpio_put(17, false);
+    gpio_put(active_config->gpio_cs, false);
 }
 
 
 static inline void wizchip_deselect(void) {
-    gpio_put(17, true);
+    gpio_put(active_config->gpio_cs, true);
 }
 
 
@@ -45,6 +48,8 @@ static wiz_NetInfo g_net_info = {
 
 
 bool w5500_udp_init(w5500_udp_t *config){
+    active_config = config;
+
     // Set as input for testing if card is present
     gpio_init(config->gpio_cs);
     gpio_pull_up(config->gpio_cs);
@@ -102,6 +107,7 @@ bool w5500_udp_phy_connected(w5500_udp_t *config){
         ctlwizchip(CW_GET_PHYLINK, &temp);
         return temp == PHY_LINK_ON;
     }
+    return false;
 }
 
 

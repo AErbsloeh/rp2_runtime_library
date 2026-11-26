@@ -49,8 +49,10 @@ bool ad526x_soft_reset(ad526x_t *handler);
 
 
 /*! \brief Function for controlling the shutdown of device
+* \details The AD5260/2 can only be shut down with its SHDN pin, there is no serial command for it.
+*          Therefore no data is transmitted and the function has no hardware effect.
 * \param handler    Device handler for using device
-* \return           Boolean if process is done completely
+* \return           Boolean true if the device is meant to be active (shutdown == false), false if a shutdown was requested but cannot be done in software
 */
 bool ad526x_define_shutdown(ad526x_t *handler);
 

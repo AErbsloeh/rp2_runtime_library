@@ -42,6 +42,7 @@ bool ad5141_spi_reset_software(ad5141_spi_rp2_t *gpio_csn);
 *   \param gpio_csn    Predefined SPI device handler
 *   \param enable_rdac0     Boolean for enabling the RDAC0
 *   \param enable_rdac1     Boolean for enabling the RDAC1
+*   \return Boolean if all frames were transmitted. Each RDAC is set individually (false = shutdown), CS is toggled per frame
 */
 bool ad5141_spi_control_shutdown(ad5141_spi_rp2_t *gpio_csn, bool enable_rdac0, bool enable_rdac1);
 

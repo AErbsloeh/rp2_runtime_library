@@ -87,8 +87,7 @@ bool sd_init(sd_t *config){
 
 
 bool sd_get_state(sd_t *config){
-    sd_card_state_t state = sd_card.state;
-    return false;
+    return config->init_done && config->card_available && config->mount_done;
 }
 
 
@@ -161,9 +160,13 @@ bool sd_read_complete(sd_t *config, char *buffer, size_t buf_size){
         return false;
     } else {
         UINT br;
-        f_lseek(&fil, 0);
-        fr = f_read(&fil, buffer, buf_size-1, &br);
-        if(fr == FR_OK || br == 0){
+        fr = f_lseek(&fil, 0);
+        if(fr == FR_OK){
+            fr = f_read(&fil, buffer, buf_size-1, &br);
+        } else {
+            br = 0;
+        }
+        if(fr == FR_OK){
             buffer[br] = '\0';
             return true;
         } else {

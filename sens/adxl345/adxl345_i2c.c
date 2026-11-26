@@ -83,7 +83,7 @@ bool ADXL345_init(adxl345_i2c_rp2_t *handler) {
         // BW_RATE auf 100 Hz + Tiefpassfilter (Bit D4=1) + disable Low Power Mode 
         ADXL345_i2c_write_byte(handler, ADXL345_BW_RATE, 0x0D); // 0x0D = 100 Hz + Filter
 
-        handler->init_done = ADXL345_i2c_read_id(handler) == ADXL345_DEVID;
+        handler->init_done = ADXL345_i2c_read_id(handler);
     } else {
         handler->init_done = false;
     }
@@ -94,7 +94,7 @@ bool ADXL345_init(adxl345_i2c_rp2_t *handler) {
 bool ADXL345_i2c_read_id(adxl345_i2c_rp2_t *handler){
     uint8_t buffer[1] = {0};
     ADXL345_i2c_read_data(handler, 0x00, buffer, 1);
-    return (buffer[0] == 0xE5);
+    return (buffer[0] == ADXL345_DEVID);
 };
 
 

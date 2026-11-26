@@ -1,6 +1,9 @@
 #include "adc/ad7779/ad7779.h"
 
 
+#define AD7779_INIT_RETRIES 50
+
+
 // ======================================== INTERNAL READ/WRITE FUNCTIONS ===============================================
 /*! \brief Function for writing a register to the AD7779
  *  \param handler  Pointer to typedef struct ad7779_t to handle the settings
@@ -124,7 +127,8 @@ bool ad7779_init(ad7779_t *handler){
         return false;
     }
     // Check for CHIP_ERROR and INIT_COMPLETE
-    while (1) {
+    handler->init_done = false;
+    for (uint8_t attempt = 0; attempt < AD7779_INIT_RETRIES; attempt++) {
         ad7779_read_reg(handler, AD7779_REG_GENERAL_ERRORS_REGISTER_2, &rx_read[1]);
         if (rx_read[1] == 0x00) {
             ad7779_read_reg(handler, AD7779_REG_ERROR_STATUS_REGISTER_3, &rx_read[1]);
@@ -141,7 +145,7 @@ bool ad7779_init(ad7779_t *handler){
     if (DEBUG_MODE) {
         ad7779_print_all_status_error_register(handler);
     }   
-    return true;
+    return handler->init_done;
 }
 
 
@@ -247,6 +251,10 @@ bool ad7779_set_sampling_rate(ad7779_t *handler)
         f_mod = 4096000/8; // Low Power Mode
     }
 
+    if (handler->sampling_rate_SPS == 0) {
+        return false;
+    }
+
     uint32_t dec_int_N = f_mod / handler->sampling_rate_SPS; // Total Decimation Integer N
     uint64_t remainder = f_mod % handler->sampling_rate_SPS; // Remainder for fractional part
 
@@ -256,7 +264,7 @@ bool ad7779_set_sampling_rate(ad7779_t *handler)
         return false;
     }
     
-    if (!ad7779_read_reg(handler, AD7779_REG_LOAD_UPDATE_REGISTER, &current_value)) {
+    if (!ad7779_read_reg(handler, AD7779_REG_DECIMATION_RATE_REGISTER_N_MSB, &current_value)) {
             return false;
         }
     current_value &= 0xF0;
@@ -425,7 +433,6 @@ void ad7779_print_all_status_error_register(ad7779_t *handler){
     if (handler->data_read_mode){
         ad7779_data_read_mode(handler); // Disable Data Read Mode to be able to read registers
     }
-    ad7779_data_read_mode(handler); // Disable Data Read Mode to be able to read registers
     printf("- - - - AD7779 Status and Error Registers - - - -\n");
 
     ad7779_read_reg(handler, AD7779_REG_CHANNEL0_STATUS_REGISTER, &rx_read[1]);

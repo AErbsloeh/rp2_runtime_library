@@ -20,6 +20,11 @@
 #define FLASH_INS_DIS_POWERDOWN     0xAB
 #define FLASH_INS_EN_POWERDOWN      0xB9
 
+#define FLASH_TIMEOUT_WRITE_MS      100
+#define FLASH_TIMEOUT_SECTOR_MS     5000
+#define FLASH_TIMEOUT_CHIP_MS       400000
+#define FLASH_TIMEOUT_DONE_MS       20000
+
 
 // ===================== CALLABLE FUNCS (FLASH DATA) =====================
 bool flash_data_init(flash_data_t *data, size_t page_size){
@@ -57,6 +62,18 @@ bool flash_send_transmission(fpga_flash_t *config, uint8_t *datatx, size_t datat
 
 bool flash_receive_transmission(fpga_flash_t *config, uint8_t *data_rx, size_t datarx_len){
     return spi_read_blocking(config->spi->spi_mod, 0x00, data_rx, datarx_len);
+}
+
+
+static bool flash_wait_until_done(fpga_flash_t *config, uint32_t timeout_ms, uint32_t poll_us){
+    const absolute_time_t deadline = make_timeout_time_ms(timeout_ms);
+    while(!flash_erasing_is_done(config)){
+        if(time_reached(deadline)){
+            return false;
+        }
+        sleep_us(poll_us);
+    }
+    return true;
 }
 
 
@@ -174,8 +191,13 @@ bool fpga_program_reset_do(fpga_flash_t *config){
     sleep_ms(1);
 
     if(config->use_done){
-        while(!gpio_get(config->gpio_done))
+        const absolute_time_t deadline = make_timeout_time_ms(FLASH_TIMEOUT_DONE_MS);
+        while(!gpio_get(config->gpio_done)){
+            if(time_reached(deadline)){
+                return false;
+            }
             sleep_us(10);
+        }
     }
     return true;
 }
@@ -187,15 +209,12 @@ bool fpga_program_check_done(fpga_flash_t *config){
     }
     
     if(config->use_done){
-        const uint16_t timeout_ms = 20000;
-        uint16_t elapsed = 0;
-
+        const absolute_time_t deadline = make_timeout_time_ms(FLASH_TIMEOUT_DONE_MS);
         while (!gpio_get(config->gpio_done)) {
-            sleep_us(20);
-            elapsed++;
-            if (elapsed > timeout_ms) {
+            if (time_reached(deadline)) {
                 return false;
             }
+            sleep_us(20);
         }
         return true;
     } else {
@@ -275,6 +294,7 @@ bool flash_set_power_down(fpga_flash_t *config, bool enable){
 
     flash_program_spi_disable(config);
     sleep_us(10);
+    return true;
 }
 
 
@@ -329,12 +349,10 @@ bool flash_write_data(fpga_flash_t *config, uint32_t start_address, uint8_t data
     flash_send_transmission(config, data, data_len);
     gpio_put(config->gpio_csn, true);
 
-    do {
-        sleep_us(1);
-    } while (!flash_erasing_is_done(config));
+    const bool done = flash_wait_until_done(config, FLASH_TIMEOUT_WRITE_MS, 10);
     config->is_write_enabled = false;
     
-    return true;
+    return done;
 }
 
 
@@ -382,19 +400,17 @@ bool flash_read_data_from_buffer(fpga_flash_t *config){
 
 bool flash_erasing_sector_complete(fpga_flash_t *config, uint32_t start_address){
     flash_erasing_sector_start(config, start_address);
-    do {
-        sleep_us(10);
-    } while (!flash_erasing_is_done(config));
-    return flash_erasing_stop(config);
+    const bool done = flash_wait_until_done(config, FLASH_TIMEOUT_SECTOR_MS, 100);
+    const bool stopped = flash_erasing_stop(config);
+    return done && stopped;
 }
 
 
 bool flash_erasing_all_complete(fpga_flash_t *config){
     flash_erasing_all_start(config);
-    do {
-        sleep_ms(100);
-    } while (!flash_erasing_is_done(config));
-    return flash_erasing_stop(config);
+    const bool done = flash_wait_until_done(config, FLASH_TIMEOUT_CHIP_MS, 10000);
+    const bool stopped = flash_erasing_stop(config);
+    return done && stopped;
 }
 
 

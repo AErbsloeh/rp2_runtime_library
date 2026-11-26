@@ -34,6 +34,10 @@ bool sd_detected(sd_t *config);
 bool sd_init(sd_t *config);
 
 
+/*! \brief Function for getting the usability state of the SD card
+* \param config    Pointer to SD card configuration struct
+* \return          True if the driver is initialized, a card is available and the file system is mounted
+*/
 bool sd_get_state(sd_t *config);
 
 /*! \brief Function for mounting to the device using SPI interface
@@ -79,7 +83,7 @@ bool sd_write_content(sd_t *config, char *content);
 * \param config     Pointer to SD card configuration struct
 * \param buffer     Char array / string with data
 * \param buf_size   Size of the buffer
-* \return           Return if read process is done
+* \return           Return if the whole content was read (false on seek/read error, buffer is then an empty string)
 */
 bool sd_read_complete(sd_t *config, char *buffer, size_t buf_size);
 

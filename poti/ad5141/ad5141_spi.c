@@ -21,8 +21,7 @@ bool ad5141_spi_reset_software(ad5141_spi_rp2_t *gpio_csn)
     buffer[0] = 0xB0;
     buffer[1] = 0x00;
 
-    spi_write_blocking(gpio_csn->spi_handler->spi_mod, buffer, 2);
-    return true;
+    return send_data_spi_module(gpio_csn->spi_handler, gpio_csn->gpio_csn, buffer, 2) == 2;
 }
 
 
@@ -32,21 +31,17 @@ bool ad5141_spi_control_shutdown(ad5141_spi_rp2_t *gpio_csn, bool enable_rdac0, 
         configure_spi_module(gpio_csn->spi_handler, false);
     } 
 
-    // --- Defining buffer values
-    uint8_t  buffer[2] = {0};
-    if (enable_rdac0 && !enable_rdac1){
-        buffer[0] = 0xC0;
-        buffer[1] = (enable_rdac0) ? 0x00 : 0x01;
-    } else if (!enable_rdac0 && enable_rdac1){
-        buffer[0] = 0xC1;
-        buffer[1] = (enable_rdac1) ? 0x00 : 0x01;
+    bool done = true;
+    if(enable_rdac0 == enable_rdac1){
+        uint8_t buffer[2] = {0xC8, (enable_rdac0) ? 0x00 : 0x01};
+        done = (send_data_spi_module(gpio_csn->spi_handler, gpio_csn->gpio_csn, buffer, 2) == 2);
     } else {
-        buffer[0] = 0xC8;
-        buffer[1] = (enable_rdac0 && enable_rdac1) ? 0x00 : 0x01;
+        uint8_t buffer_rdac0[2] = {0xC0, (enable_rdac0) ? 0x00 : 0x01};
+        uint8_t buffer_rdac1[2] = {0xC1, (enable_rdac1) ? 0x00 : 0x01};
+        done = (send_data_spi_module(gpio_csn->spi_handler, gpio_csn->gpio_csn, buffer_rdac0, 2) == 2);
+        done = (send_data_spi_module(gpio_csn->spi_handler, gpio_csn->gpio_csn, buffer_rdac1, 2) == 2) && done;
     }
-
-    spi_write_blocking(gpio_csn->spi_handler->spi_mod, buffer, 2);
-    return true;
+    return done;
 }
 
 
@@ -74,9 +69,7 @@ bool ad5141_spi_define_level(ad5141_spi_rp2_t *gpio_csn, uint8_t rdac_sel, uint8
         uint8_t  buffer[2] = {0};
         buffer[0] = 0x10 | (rdac_sel & 0x0F);
         buffer[1] = pot_position;
-        spi_write_blocking(gpio_csn->spi_handler->spi_mod, buffer, 2);
-
-        return true;
+        return send_data_spi_module(gpio_csn->spi_handler, gpio_csn->gpio_csn, buffer, 2) == 2;
     } else {
         return false;
     } 

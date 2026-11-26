@@ -6,10 +6,10 @@
 
 
 /*!
- * \brief   Get the current runtime in milliseconds
- * \return  uint64_t  with current runtime in milliseconds
+ * \brief   Get the current runtime in microseconds since system start
+ * \return  uint64_t  with current runtime in microseconds
  */
-uint64_t get_runtime_ms(void);
+uint64_t get_runtime_us(void);
 
 
 #endif

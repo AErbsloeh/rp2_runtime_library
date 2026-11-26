@@ -7,13 +7,11 @@
 	#include "hardware/gpio.h"
 #endif
 
-// ======================================== INTERNAL FUNCTIONS ===============================================
-static uint8_t pin_used = 0;	// Default pin of board LED (Pico / Pico 2)
+static uint8_t pin_used = 0;
 static bool led_state = false;
 static uint8_t led_rgb[3] = {0, 20, 0};
 
 
-// ======================================== CALLABLE FUNCTIONS ===============================================
 void set_gpio_default_led(uint8_t led_pin){
 	#ifdef LED_CYW43_SUPPORTED
 		pin_used = CYW43_WL_GPIO_LED_PIN;
@@ -44,7 +42,6 @@ bool init_default_led(void){
 		ws2812_init(pio, pin_used);
 		put_pixel_rgb(0, 0, 0); 
 	#elif LED_TINY2040_SUPPORTED
-		// Init of residual LED pins on Tiny2040
 		gpio_init(18);
 		gpio_set_dir(18, GPIO_OUT);
 		gpio_put(18, true);
@@ -57,7 +54,6 @@ bool init_default_led(void){
 		gpio_set_dir(20, GPIO_OUT);
 		gpio_put(20, true);		
 	#else
-		set_gpio_default_led(25);
 		gpio_init(pin_used);
 		gpio_set_dir(pin_used, GPIO_OUT);
 		gpio_put(pin_used, false);
@@ -90,9 +86,7 @@ bool set_state_default_led(bool state){
 
 bool get_state_default_led(void){
 	#ifdef LED_CYW43_SUPPORTED
-		// GPIO pin for the LED on the CYW43 is write-only
 	#elif LED_KB2040_SUPPORTED || USE_WS2812_DEFAULT
-		// WS2812 state cannot be read back
 	#elif LED_TINY2040_SUPPORTED
 		led_state = !gpio_get(pin_used);
 	#else
