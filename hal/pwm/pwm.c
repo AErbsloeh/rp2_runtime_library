@@ -6,7 +6,7 @@
 
 
 static pwm_t *pwm_hal_slice_owner[PWM_HAL_MAX_SLICES] = {0};
-static bool pwm_hal_irq_installed[32] = {0};
+static bool pwm_hal_irq_installed[NUM_IRQS] = {0};
 
 
 static void pwm_hal_shared_irq_handler(void) {
@@ -34,6 +34,10 @@ bool pwm_hal_init(pwm_t *handler) {
 
     if (handler->init_done) {
         return true;
+    }
+
+    if (handler->use_irq && (handler->irq_number >= NUM_IRQS)) {
+        return false;
     }
 
     gpio_set_function(handler->gpio, GPIO_FUNC_PWM);

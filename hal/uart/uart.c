@@ -25,26 +25,34 @@ void construct_uart_write_string(uart_rp2_t *handler, const char *s){
 };
 
 
-void construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx){
-    uint8_t i = 0;
-    while (is_readable(handler) && i < len_rx)
+size_t construct_uart_read_data(uart_rp2_t *handler, uint8_t buffer_rx[], size_t len_rx){
+    size_t num_read = 0;
+    while (is_readable(handler) && num_read < len_rx)
     {
-        uint8_t ch = uart_getc(handler->uart_id);
-        buffer_rx[i] = ch;
-        i++;
+        buffer_rx[num_read] = uart_getc(handler->uart_id);
+        num_read++;
     }
+    return num_read;
 };
 
 
-void construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx){
-    uint8_t i = 0;
-    while (is_readable(handler) && i < len_rx)
+size_t construct_uart_read_string(uart_rp2_t *handler, char buffer_rx[], size_t len_rx){
+    if (len_rx == 0) {
+        return 0;
+    }
+
+    size_t num_read = 0;
+    while (is_readable(handler) && num_read < len_rx - 1)
     {
         char ch = uart_getc(handler->uart_id);
-        if (ch == '\n' || ch == '\r') buffer_rx[i] = '\0';
-        else buffer_rx[i] = ch;
-        i++;
+        if (ch == '\n' || ch == '\r') {
+            break;
+        }
+        buffer_rx[num_read] = ch;
+        num_read++;
     }
+    buffer_rx[num_read] = '\0';
+    return num_read;
 };
 
 

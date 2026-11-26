@@ -2,15 +2,11 @@
 #include "hardware/gpio.h"
 
 
-// ========================================= DEFINITION FOR NORMAL SPI ===============================================
 bool configure_spi_module(spi_rp2_t *handler, bool use_spi_slave){
-    // --- Init of GPIOs
-    // GPIO: MOSI, SCLK, MISO
     gpio_set_function(handler->pin_sclk, GPIO_FUNC_SPI);
     gpio_set_function(handler->pin_mosi, GPIO_FUNC_SPI);
     gpio_set_function(handler->pin_miso, GPIO_FUNC_SPI);
 
-    // --- Init of SPI module
     spi_init(handler->spi_mod, handler->fspi_khz * 1000);
     spi_set_slave(handler->spi_mod, use_spi_slave);
     spi_set_format(
@@ -49,21 +45,17 @@ int8_t receive_data_spi_module(spi_rp2_t *handler, uint8_t gpio_num_csn, uint8_t
 }
 
 
-// ========================================= DEFINITION FOR SOFT SPI ===============================================
 bool configure_spi_module_soft(spi_rp2_t *handler){
-    // GPIO: SCLK
     gpio_init(handler->pin_sclk);
     gpio_set_dir(handler->pin_sclk, GPIO_OUT);
     gpio_set_drive_strength(handler->pin_sclk, GPIO_DRIVE_STRENGTH_2MA);
     gpio_put(handler->pin_sclk, (handler->mode == 2) || (handler->mode == 3));
 
-    // GPIO: MOSI
     gpio_init(handler->pin_mosi);
     gpio_set_dir(handler->pin_mosi, GPIO_OUT);
     gpio_set_drive_strength(handler->pin_mosi, GPIO_DRIVE_STRENGTH_2MA);
     gpio_put(handler->pin_mosi, false);
 
-    // GPIO: MISO
     gpio_init(handler->pin_miso);
     gpio_set_dir(handler->pin_miso, GPIO_IN);
     gpio_set_input_hysteresis_enabled(handler->pin_miso, true);
@@ -82,14 +74,12 @@ uint16_t send_data_spi_module_soft(spi_rp2_t *handler, uint8_t gpio_num_csn, uin
     
     gpio_put(gpio_num_csn, false);
     for(uint8_t cnt=0; cnt < 8; cnt++){
-        // Starting condition
         if(cpha && cnt == 0) {
             sleep_us(1);
         } else {
             gpio_put(handler->pin_mosi, (data >> position_send) & 0x0001);
         };
 
-        // First edge
         gpio_put(handler->pin_sclk, !cpol);
         if(cpha){
             gpio_put(handler->pin_mosi, (data >> position_send) & 0x0001);
@@ -98,7 +88,6 @@ uint16_t send_data_spi_module_soft(spi_rp2_t *handler, uint8_t gpio_num_csn, uin
         };
         sleep_us(1);
 
-        // Second edge
         gpio_put(handler->pin_sclk, cpol);
         if(cpha){
             data_returned |= (gpio_get(handler->pin_miso) << position_send);
@@ -118,7 +107,7 @@ uint16_t send_data_spi_module_soft(spi_rp2_t *handler, uint8_t gpio_num_csn, uin
 uint32_t translate_array_into_uint32(uint8_t buffer_rx[], size_t len_rx){
     uint32_t raw_data = 0;
     for(uint8_t idx = 0; idx < len_rx; idx++){
-        raw_data |= buffer_rx[idx] << 8*idx;
+        raw_data |= (uint32_t)buffer_rx[idx] << (8 * idx);
     }
     return raw_data;
 }

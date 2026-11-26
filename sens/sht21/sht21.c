@@ -2,6 +2,9 @@
 #include "hardware/gpio.h"
 
 
+#define SHT21_READ_RETRIES 50
+
+
 // ======================================== FUNCTIONS ===============================================
 bool SHT21_init(sht21_t *handler){
     init_i2c_module(handler->i2c_mod);
@@ -81,9 +84,13 @@ uint16_t SHT21_read_data(sht21_t *handler, uint8_t command){
 
     i2c_write_blocking(handler->i2c_mod->i2c_mod, 0x40, buffer, 1, false);
     sleep_us(50);
+    uint8_t attempts = 0;
     while (i2c_read_blocking(handler->i2c_mod->i2c_mod, 0x40, buffer, 3, false) == PICO_ERROR_GENERIC){
+        if(++attempts >= SHT21_READ_RETRIES){
+            return 0;
+        }
         sleep_ms(2);
-    }    
+    }
     // Taking data and ignore last two status bits and checksum
     uint16_t raw_data = ((buffer[0] << 8) + buffer[1]) & 0xFFFC; 
     return raw_data;
@@ -92,7 +99,7 @@ uint16_t SHT21_read_data(sht21_t *handler, uint8_t command){
 
 float SHT21_get_humidity_float(sht21_t *handler){
     uint16_t raw_data     = SHT21_read_data(handler, SHT21_RH_NO_HOLD);
-    float    rel_humidity = -6 + (125 * raw_data) / 65536;
+    float    rel_humidity = -6.0f + (125.0f * raw_data) / 65536.0f;
     return rel_humidity;
 }
 
@@ -104,7 +111,7 @@ uint16_t SHT21_get_humidity_uint(sht21_t *handler){
 
 float SHT21_get_temperature_float(sht21_t *handler){
     uint16_t raw_data    = SHT21_read_data(handler, SHT21_T_NO_HOLD);
-    float    temperature = 226.3 + (175.72 * raw_data) / 65536;
+    float    temperature = 226.3f + (175.72f * raw_data) / 65536.0f;
     return temperature;
 }
 

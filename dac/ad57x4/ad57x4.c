@@ -8,7 +8,6 @@
 #define AD57x4_REG_CNTRL    0x03
 
 
-// =========================== INTERNAL FUNCTIONS ===========================
 int8_t ad57x4_spi_rp2_transmission(ad57x4_t *config, bool rnw, uint8_t reg, uint8_t adr, uint16_t data) {
     uint8_t buffer_tx[3];
     buffer_tx[0] = ((rnw) ? 0x80 : 0x00) | ((reg & 0x07) << 3) | ((adr & 0x07) << 0);
@@ -19,20 +18,16 @@ int8_t ad57x4_spi_rp2_transmission(ad57x4_t *config, bool rnw, uint8_t reg, uint
 }
 
 
-// =========================== CALLABLE FUNCTIONS ===========================
 bool ad57x4_init(ad57x4_t *config){
     if(!config->spi_mod->init_done){
         configure_spi_module(config->spi_mod, false);
     }
 
-    // --- Init of GPIOs
-    // Chip Select Line (Active Low)
     gpio_init(config->gpio_num_csn);
     gpio_set_dir(config->gpio_num_csn, GPIO_OUT);
     gpio_put(config->gpio_num_csn, true);
     gpio_set_drive_strength(config->gpio_num_csn, GPIO_DRIVE_STRENGTH_2MA);
 
-    // Data Clear Line (Active Low)
     if(config->use_gpio_dclr){
         gpio_init(config->gpio_num_dclr);
         gpio_set_dir(config->gpio_num_dclr, GPIO_OUT);
@@ -40,27 +35,21 @@ bool ad57x4_init(ad57x4_t *config){
         gpio_set_drive_strength(config->gpio_num_dclr, GPIO_DRIVE_STRENGTH_2MA);
     }
 
-    // Load Data Simultanously (Active High: Update on Falling Edge)
     if(config->use_gpio_ldac){
-        gpio_init(config->use_gpio_ldac);
-        gpio_set_dir(config->use_gpio_ldac, GPIO_OUT);
-        gpio_put(config->use_gpio_ldac, false);
-        gpio_set_drive_strength(config->use_gpio_ldac, GPIO_DRIVE_STRENGTH_2MA);
+        gpio_init(config->gpio_num_ldac);
+        gpio_set_dir(config->gpio_num_ldac, GPIO_OUT);
+        gpio_put(config->gpio_num_ldac, false);
+        gpio_set_drive_strength(config->gpio_num_ldac, GPIO_DRIVE_STRENGTH_2MA);
     }
     
-    // --- Reset of Device
     ad57x4_reset(config);
 
-    // --- Do configuration
-    // Writing to the "Power control register"
     uint16_t data = 0x0000 | config->en_pwr_chnnl;
     ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_PWR, 0x00, data);
     
-    // Writing to the "Control register"
     data = ((config->spi_sdo_disable) ? 0x0001 : 0x0000);
     ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_CNTRL, 0x01, data);
 
-    // Writing to the "Output range select register"
     data = 0x0000 | config->range_mode;
     ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_RANGE, AD57x4_ADR_DAC_ALL, data);
 
@@ -79,7 +68,8 @@ bool ad57x4_reset(ad57x4_t *config){
         }
     } else {
         ad57x4_spi_rp2_transmission(config, false, AD57x4_REG_CNTRL, 0x04, 0x0000);
-    };    
+    }
+    return true;
 }
 
 

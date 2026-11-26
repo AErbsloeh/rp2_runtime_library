@@ -107,6 +107,9 @@ bool ad4858_init_cmos(ad4858_t* device, ad4858_cmos_t* config){
         case AD4858_PACKETSIZE_32BIT:
             config->packet_size = 32;
             break;
+        default:
+            config->packet_size = 0;
+            return false;
     }
 
     config->pwm_slice_cnv = pwm_gpio_to_slice_num(config->gpio_convert);
@@ -144,16 +147,24 @@ bool ad4858_start_continuous_conversion(ad4858_cmos_t* config){
     }
 
     uint32_t sys_clk_hz = clock_get_hz(clk_sys);
+    const uint32_t pwm_max_ticks = 65536u;
 
     gpio_set_function(config->gpio_convert, GPIO_FUNC_PWM);
     {
-        uint32_t period_ticks = (uint32_t)(((uint64_t)sys_clk_hz * config->sampling_period_us) / 1000000u);
+        uint64_t period_ticks_full = ((uint64_t)sys_clk_hz * config->sampling_period_us) / 1000000u;
+        uint32_t clk_div = (uint32_t)((period_ticks_full + pwm_max_ticks - 1u) / pwm_max_ticks);
+        if (clk_div < 1) clk_div = 1;
+        if (clk_div > 255) clk_div = 255;
+
+        uint32_t period_ticks = (uint32_t)(period_ticks_full / clk_div);
+        if (period_ticks > pwm_max_ticks) period_ticks = pwm_max_ticks;
         if (period_ticks < 4) period_ticks = 4;
 
         uint32_t high_ticks = period_ticks / 20;
         if (high_ticks < 1) high_ticks = 1;
 
         pwm_config c = pwm_get_default_config();
+        pwm_config_set_clkdiv(&c, (float)clk_div);
         pwm_config_set_wrap(&c, (uint16_t)(period_ticks - 1u));
         pwm_init(config->pwm_slice_cnv, &c, false);
         pwm_set_gpio_level(config->gpio_convert, (uint16_t)high_ticks);
@@ -162,10 +173,17 @@ bool ad4858_start_continuous_conversion(ad4858_cmos_t* config){
 
     gpio_set_function(config->gpio_cmos_sck, GPIO_FUNC_PWM);
     {
-        uint32_t period_ticks = sys_clk_hz / config->cmos_sclk_frequency;
+        uint32_t period_ticks_full = sys_clk_hz / config->cmos_sclk_frequency;
+        uint32_t clk_div = (period_ticks_full + pwm_max_ticks - 1u) / pwm_max_ticks;
+        if (clk_div < 1) clk_div = 1;
+        if (clk_div > 255) clk_div = 255;
+
+        uint32_t period_ticks = period_ticks_full / clk_div;
+        if (period_ticks > pwm_max_ticks) period_ticks = pwm_max_ticks;
         if (period_ticks < 4) period_ticks = 4;
 
         pwm_config c = pwm_get_default_config();
+        pwm_config_set_clkdiv(&c, (float)clk_div);
         pwm_config_set_wrap(&c, (uint16_t)(period_ticks - 1u));
         pwm_init(config->pwm_slice_sck, &c, false);
         pwm_set_gpio_level(config->gpio_cmos_sck, (uint16_t)(period_ticks / 2));

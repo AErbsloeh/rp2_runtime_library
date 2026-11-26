@@ -25,7 +25,7 @@
  *
  * \param gpio            GPIO pin used for PWM output
  * \param slice           PWM slice number (set automatically from gpio)
- * \param irq_number       IRQ number (typically PWM_IRQ_WRAP)
+ * \param irq_number       IRQ number (typically PWM_IRQ_WRAP, PWM_IRQ_WRAP_0 on RP2350), the initialisation fails if it is not a valid IRQ number
  * \param use_irq         true = interrupts are used, false = no IRQ
  * \param irq_callback    Function pointer called from the ISR when use_irq is true
  * \param clk_div         Clock divider for the PWM slice (8.4 fixed-point, 1.0 .. 255.9375)

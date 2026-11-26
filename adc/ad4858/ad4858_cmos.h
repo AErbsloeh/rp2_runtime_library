@@ -72,7 +72,8 @@ typedef struct {
  *  \param config   Pointer to the CMOS interface settings to initialize
  *  \return         True on success, false if gpio_convert and gpio_cmos_sck
  *                  happen to share the same PWM slice (they need
- *                  independent frequencies and therefore must not)
+ *                  independent frequencies and therefore must not) or if the
+ *                  packet size register holds an unsupported value
  */
 bool ad4858_init_cmos(ad4858_t* device, ad4858_cmos_t* config);
 
@@ -94,6 +95,7 @@ bool ad4858_do_single_conversion(ad4858_cmos_t* config);
  *  \param config   Pointer to the CMOS interface settings
  *  \return         True on success, false if already running or if
  *                  cmos_sclk_frequency / sampling_period_us are zero
+ *  \note           Periods above 65536 PWM ticks are realised with an integer clock divider (1..255)
  */
 bool ad4858_start_continuous_conversion(ad4858_cmos_t* config);
 

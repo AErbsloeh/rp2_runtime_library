@@ -167,16 +167,22 @@ void ad4858_set_packet_size(ad4858_t *config, uint8_t packet_size){
 
 
 uint8_t ad4858_get_packet_size(ad4858_t* config){
-    return do_spi_transmission(config, true, REG_PACKET, 0x00);
+    return do_spi_transmission(config, true, REG_PACKET, 0x00) & 0x03;
 }
 
 
 void ad4858_set_softspan(ad4858_t *config, uint8_t channel, uint8_t lvl){
+    if(channel >= NUM_CHANNELS){
+        return;
+    }
     do_spi_transmission_modified(config, REG_SOFTSPAN_ADDR[channel], lvl, 0x0F);
 }
 
 
 void ad4858_set_channel_into_sleep(ad4858_t *config, uint8_t channel, bool go_sleep){
+    if(channel >= NUM_CHANNELS){
+        return;
+    }
     do_spi_transmission_modified(config, REG_CHANNEL_SLEEP, (go_sleep) ? (1 << channel) : 0x00, (1 << channel));
 }
 

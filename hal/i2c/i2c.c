@@ -37,17 +37,20 @@ void scan_i2c_bus_for_device(i2c_rp2_t *handler){
     printf("\".\" = No, \"@\" = Yes\n");
     printf("   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
 
-    bool ret;
-    bool state_i2c;
+    uint8_t num_devices = 0;
     for (uint8_t addr=0; addr < 128; ++addr) {
         if (addr % 16 == 0) {
             printf("%02x ", addr);
         }
-        ret = check_i2c_bus_for_device_specific(handler, addr);
+        bool ret = check_i2c_bus_for_device_specific(handler, addr);
+        if(ret){
+            num_devices++;
+        }
         printf(ret ? "@" : ".");
         printf(addr % 16 == 15 ? "\n" : "  ");
     };
-    printf("Are devices available? -> %x (num: %d)\n", state_i2c, handler->avai_devices);
+    handler->avai_devices = num_devices;
+    printf("Are devices available? -> %x (num: %d)\n", num_devices > 0, handler->avai_devices);
 }
 
 
@@ -95,7 +98,7 @@ bool construct_i2c_read_data(i2c_rp2_t *i2c_handler, uint8_t adr, uint8_t buffer
 uint64_t translate_array_into_uint64(uint8_t buffer_rx[], size_t len_rx){
     uint64_t raw_data = 0;
     for(uint8_t idx = 0; idx < len_rx; idx++){
-        raw_data |= buffer_rx[idx] << 8*idx;
+        raw_data |= (uint64_t)buffer_rx[idx] << (8 * idx);
     }
     return raw_data;
 }

@@ -5,29 +5,27 @@
 #include <stdio.h>
 
 
-// ======================= INTERNAL VARIABLES AND FUNCS ========================
 static int rp2_dma_channel = 0;
 static dma_channel_config rp2_dma_cfg;
 
-// --- Data buffer
-volatile uint64_t timestamp = 0;
-volatile uint16_t* buffer_a;
-volatile uint16_t* buffer_b;
+static volatile uint64_t timestamp = 0;
+static volatile uint16_t* buffer_a = NULL;
+static volatile uint16_t* buffer_b = NULL;
+static size_t buffer_samples = 0;
 
-volatile size_t buffer_idx = 0;
-volatile bool use_buffer_a = true;
-volatile bool buffer_a_rdy = false;
-volatile bool buffer_b_rdy = false;
+static volatile size_t buffer_idx = 0;
+static volatile bool use_buffer_a = true;
+static volatile bool buffer_a_rdy = false;
+static volatile bool buffer_b_rdy = false;
 
 
-uint64_t get_timestamp(void){
+static uint64_t get_timestamp(void){
     absolute_time_t now = get_absolute_time();
     return to_us_since_boot(now);
 }
 
 
-// --- IRQ handler
-void rp2_adc_dma_handler(void){
+static void rp2_adc_dma_handler(void){
     dma_hw->ints0 = 1u << rp2_dma_channel;
     timestamp = get_timestamp();
 
@@ -43,7 +41,6 @@ void rp2_adc_dma_handler(void){
 }
 
 
-// =============================== GLOBAL FUNCS ===============================
 uint8_t get_gpio_rp2_adc_channel(uint8_t channel){
     switch(channel){
         case RP2_ADC_CH0:
@@ -79,7 +76,6 @@ bool rp2_adc_init_dma(rp2_adc_t* config){
     float clkdiv = 48000000.0f / ((float)config->sampling_rate);
     adc_set_clkdiv(clkdiv);
 
-    // DMA Setup
     rp2_dma_channel = dma_claim_unused_channel(true);
     rp2_dma_cfg = dma_channel_get_default_config(rp2_dma_channel);
 
@@ -90,10 +86,10 @@ bool rp2_adc_init_dma(rp2_adc_t* config){
     dma_channel_configure(
         rp2_dma_channel,
         &rp2_dma_cfg,
-        buffer_a,           // Data Destination
-        &adc_hw->fifo,      // Data Source
-        config->buffersize, // Buffer Size
-        false               // Start DMA controller
+        buffer_a,
+        &adc_hw->fifo,
+        config->buffersize,
+        false
     );
 
     dma_channel_set_irq0_enabled(rp2_dma_channel, true);
@@ -115,6 +111,17 @@ bool rp2_adc_init(rp2_adc_t* config){
     if(config->buffersize > 1){
         buffer_a = malloc(config->buffersize * sizeof(uint16_t));
         buffer_b = malloc(config->buffersize * sizeof(uint16_t));
+        if((buffer_a == NULL) || (buffer_b == NULL)){
+            free((void*)buffer_a);
+            free((void*)buffer_b);
+            buffer_a = NULL;
+            buffer_b = NULL;
+            return false;
+        }
+        buffer_samples = config->buffersize;
+    }
+    if(config->use_dma && (buffer_a == NULL)){
+        return false;
     }
     if(config->use_dma){
         return rp2_adc_init_dma(config);
@@ -147,16 +154,16 @@ uint16_t rp2_adc_read_raw(rp2_adc_t* config){
 
 
 bool rp2_adc_start_buffer(rp2_adc_t* config){
-    if(!config->init_done)
+    if(!config->init_done || (buffer_a == NULL) || (buffer_b == NULL))
         return false;
     
     buffer_idx = 0;
     use_buffer_a = true;
     buffer_a_rdy = false;
     buffer_b_rdy = false;
-    for (size_t idx = 0; idx < config->buffersize; idx++) {
-        buffer_a[buffer_idx] = 0;
-        buffer_b[buffer_idx] = 0;
+    for (size_t idx = 0; idx < buffer_samples; idx++) {
+        buffer_a[idx] = 0;
+        buffer_b[idx] = 0;
     }
 
     if(config->use_dma){
@@ -180,7 +187,7 @@ bool rp2_adc_stop_buffer(rp2_adc_t* config){
 
 
 bool rp2_adc_read_buffer_polling(rp2_adc_t* config){
-    if(!config->init_done)
+    if(!config->init_done || (buffer_a == NULL))
         return false;
     
     buffer_a[buffer_idx] = adc_read();
@@ -216,7 +223,7 @@ volatile uint16_t* rp2_adc_get_buffer(rp2_adc_t* config) {
 
 
 size_t rp2_adc_get_buffersize(void){
-    return (use_buffer_a) ? sizeof(buffer_a) : sizeof(buffer_b);
+    return buffer_samples;
 }
 
 

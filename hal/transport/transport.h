@@ -20,6 +20,8 @@ typedef struct {
 
 // ========================= FUNCTIONS FOR PROCESSING ===========================
 /*! \brief Function to initialize the selected transport interface
+* WiFi transport: the received bytes are collected in a queue of TRANSPORT_WIFI_RX_QUEUE_SIZE bytes (at least TCP_MSS + 1, default 2048), a segment which does not fit is taken by lwIP again later, so no byte is lost.
+* The function waits up to TRANSPORT_WIFI_USB_WAIT_MS (default 8000 ms) for the USB console, so the messages of the connection can be read, set it to 0 for no waiting
 * \param rx_buffer  Struct handler for handling the transport RX buffer
 * \return           Boolean for initialization is successful
 */

@@ -20,11 +20,12 @@ bool adgs1208_init(adgs1208_t *config_device){
         gpio_put(config_device->gpio_num_rstn, false);
     };
     
+    adgs1208_reset(config_device);
+
     if(config_device->num_device_dc > 1){
-        adgs1208_enable_daisy_chain(config_device);  
+        adgs1208_enable_daisy_chain(config_device);
     };
 
-    adgs1208_reset(config_device);
     config_device->init_done = true;
     return true;
 }
@@ -50,19 +51,7 @@ void adgs1208_reset(adgs1208_t *config_device){
         configure_spi_module(config_device->spi_handler, false);
     }
     
-    if(config_device->num_device_dc > 1){
-        // --- Daisy Chain Reset
-        uint8_t buffer[1] = {0};
-        for(uint8_t repeat=0; repeat < 2; repeat++){
-            gpio_put(config_device->gpio_num_rstn, false);
-            for(uint8_t idx=0; idx < config_device->num_device_dc; idx++){
-                buffer[0] = 0x00;
-                spi_write_blocking(config_device->spi_handler->spi_mod, buffer, 2);
-            }
-            gpio_put(config_device->gpio_num_rstn, true);
-            sleep_ms(10);
-        }; 
-    } else if(config_device->use_rstn_hw){
+    if(config_device->use_rstn_hw){
         // --- Hardware Reset
         for(uint8_t repeat=0; repeat < 2; repeat++){
             gpio_put(config_device->gpio_num_rstn, false);
@@ -72,23 +61,23 @@ void adgs1208_reset(adgs1208_t *config_device){
         };        
     } else {
         // --- Software Reset
-        uint8_t buffer[2] = {0};   
-       
-        // Step #1        
-        gpio_put(config_device->gpio_num_csn, false);
-        buffer[0] = 0x0B;
-        buffer[1] = 0xA3; 
-        spi_write_blocking(config_device->spi_handler->spi_mod, buffer, 2);
-        gpio_put(config_device->gpio_num_csn, true);   
-        sleep_us(200);
+        uint8_t num_devices = (config_device->num_device_dc > 1) ? config_device->num_device_dc : 1;
+        if(num_devices > ADGS1208_MAX_DEVICES_DC){
+            num_devices = ADGS1208_MAX_DEVICES_DC;
+        }
+        uint8_t buffer[2 * ADGS1208_MAX_DEVICES_DC] = {0};
+        const uint8_t reset_data[2] = {0xA3, 0x05};
 
-        // Step #2
-        gpio_put(config_device->gpio_num_csn, false);
-        buffer[0] = 0x0B;
-        buffer[1] = 0x05; 
-        spi_write_blocking(config_device->spi_handler->spi_mod, buffer, 2);
-        gpio_put(config_device->gpio_num_csn, true);
-        sleep_us(200);
+        for(uint8_t step = 0; step < 2; step++){
+            for(uint8_t idx = 0; idx < num_devices; idx++){
+                buffer[2 * idx] = 0x0B;
+                buffer[2 * idx + 1] = reset_data[step];
+            }
+            gpio_put(config_device->gpio_num_csn, false);
+            spi_write_blocking(config_device->spi_handler->spi_mod, buffer, 2 * num_devices);
+            gpio_put(config_device->gpio_num_csn, true);
+            sleep_us(200);
+        }
     };
     sleep_us(500);
 }
@@ -118,8 +107,12 @@ uint8_t adgs1208_get_data(adgs1208_t *config_device, uint8_t mux_sel){
 
 bool adgs1208_define_output(adgs1208_t *config_device, const uint8_t *mux_data){
 
+    if(!config_device->init_done || mux_data == NULL){
+        return false;
+    }
+
     gpio_put(config_device->gpio_num_csn, false);
-    if (config_device->num_device_dc == 1) {
+    if (config_device->num_device_dc <= 1) {
         // Single Trial
         uint8_t buffer[2] = {0x00};
         buffer[0] = 0x01;
@@ -136,4 +129,5 @@ bool adgs1208_define_output(adgs1208_t *config_device, const uint8_t *mux_data){
     }
     gpio_put(config_device->gpio_num_csn, true);
     sleep_us(1);
+    return true;
 }

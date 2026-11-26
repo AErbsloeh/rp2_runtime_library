@@ -23,7 +23,7 @@
     \param num_samples      Number of samples taken
     \param packet_id        Identifier for the data packet type (head)
     \param packet_tail      Identifier for the data packet type (tail)
-    \param iteration        Iteration count of the sampling
+    \param iteration        Iteration count of the sampling (counts sent packets and the blocks which were dropped because the buffer was full, so the host can see gaps)
     \param runtime_first    Runtime of the first sample in microseconds since system start
     \param runtime_last     Runtime of the last sample in microseconds since system start
     \param is_signed        Flag to indicate if the sampled data is signed
@@ -37,6 +37,7 @@
                             DAQ_TYPE_EVENT:         Irregular events (e.g. threshold or spike detection), the timestamp is the information
                             DAQ_TYPE_CLASS:         Classification result (label) of a window
     \param new_data         Flag to indicate if a complete block waits for being sent
+    \param send_offset      Number of bytes of the current packet which are already written (a packet which could only be written partly is continued with the next send), start with 0
     \param buffer           Pointer to the buffer of the stream, used by all modes (DAQ_MODE_SAMPLE: one sample, DAQ_MODE_BUFFER: one block
                             of num_samples, DAQ_MODE_PINGPONG: two blocks, written and sent alternately). Can be NULL, daq_init_sampling() creates it
 */
@@ -53,11 +54,12 @@ typedef struct {
     uint8_t const data_type;
     uint8_t volatile send_mode;
     bool volatile new_data;
+    size_t send_offset;
     daq_buffer_t* buffer;
 } daq_data_t;
 
 
-/*! \brief Function to init the DAQ sampling unit
+/*! \brief Function to init the DAQ sampling unit (creates or resets the buffer, so call it only while the sampling is stopped and nothing is sending the stream)
     \param handler    Pointer to the timer IRQ handler structure
     \param data       Pointer to the DAQ data structure
     \return           true if initialization was successful, false otherwise
@@ -91,18 +93,18 @@ bool daq_stop_sampling(tmr_repeat_irq_t* handler);
 * \param data           Pointer to the DAQ data structure
 * \return               true if the buffer is full, false otherwise
 */
-bool daq_is_fifo_full(daq_data_t* data);
+bool daq_is_buffer_full(daq_data_t* data);
 
 
 /*! \brief Function to check if the DAQ buffer is empty (no complete block and no sample waiting)
 * \param data               Pointer to the DAQ data structure
 * \return                   true if the buffer is empty, false otherwise
 */
-bool daq_is_empty_fifo(daq_data_t* data);
+bool daq_is_buffer_empty(daq_data_t* data);
 
 
 /*! \brief Function to check if the DAQ data is ready to be sent
-* The FIFO of a stream is protected by a spinlock, so a stream can be filled by daq_irq_process() on one core and sent by this function on the other core
+* The buffer of a stream is protected by a spinlock, so a stream can be filled by daq_irq_process() on one core and sent by this function on the other core
 * \param data           Pointer to the DAQ data structure
 * \return               true if data is ready to be sent, false otherwise
 */
@@ -115,7 +117,8 @@ bool daq_check_send_data(daq_data_t* data);
 void daq_send_data(daq_data_t* data);
 
 
-/*! \brief Function for processing the data in th DAQ IRQ (also usable from the other core, the FIFO is protected by a spinlock)
+/*! \brief Function for processing the data in the DAQ IRQ (also usable from the other core, the buffer is protected by a spinlock, which is claimed with daq_init_sampling())
+*   A sample which does not fit into a free block is dropped (counted in num_dropped of the buffer)
 *   \param config       Pointer to the DAQ config struct
 *   \param data         Pointer to the DAQ data packet
 *   \return             Boolean (always true) for running the Timer IRQ queue
@@ -124,6 +127,7 @@ bool daq_irq_process(daq_data_t* config, void* data);
 
 
 /*! \brief Function to calculate the number of bytes per single-sample DAQ frame
+    Frame: header (packet_id, iteration, 8 bytes timestamp) + data (num_channels * element_size) + CRC (2 bytes) + tail
     \param data       Pointer to the DAQ data structure
     \return           Number of bytes per single-sample DAQ frame
 */
@@ -131,6 +135,7 @@ uint16_t daq_get_number_bytes_per_sample(daq_data_t* data);
 
 
 /*! \brief Function to calculate the number of bytes per batch DAQ frame
+    Frame: header (packet_id, iteration, 2 x 8 bytes timestamp) + data (num_channels * num_samples * element_size) + CRC (2 bytes) + tail
     \param data       Pointer to the DAQ data structure
     \return           Number of bytes per batch DAQ frame
 */

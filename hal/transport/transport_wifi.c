@@ -7,10 +7,16 @@
 #include <string.h>
 
 #ifndef TRANSPORT_WIFI_RX_QUEUE_SIZE
-#define TRANSPORT_WIFI_RX_QUEUE_SIZE 256
+#define TRANSPORT_WIFI_RX_QUEUE_SIZE 2048
 #endif
 
-static uint8_t rx_queue[TRANSPORT_WIFI_RX_QUEUE_SIZE];
+#ifndef TRANSPORT_WIFI_USB_WAIT_MS
+#define TRANSPORT_WIFI_USB_WAIT_MS 8000
+#endif
+
+#define RX_QUEUE_SIZE (((TRANSPORT_WIFI_RX_QUEUE_SIZE) > (TCP_MSS)) ? (TRANSPORT_WIFI_RX_QUEUE_SIZE) : ((TCP_MSS) + 1))
+
+static uint8_t rx_queue[RX_QUEUE_SIZE];
 static volatile size_t rx_head = 0;
 static volatile size_t rx_tail = 0;
 
@@ -26,12 +32,13 @@ static wifi_handler_t wifi_handler = {
     .netmask = TRANSPORT_WIFI_NETMASK,
     .gateway = TRANSPORT_WIFI_GATEWAY,
     .on_receive = NULL,
-    .on_receive_context = NULL
+    .on_receive_context = NULL,
+    .on_receive_space = NULL
 };
 
 static bool rx_queue_push(uint8_t byte)
 {
-    size_t next_head = (rx_head + 1) % TRANSPORT_WIFI_RX_QUEUE_SIZE;
+    size_t next_head = (rx_head + 1) % RX_QUEUE_SIZE;
 
     if (next_head == rx_tail) {
         return false;
@@ -49,8 +56,14 @@ static bool rx_queue_pop(uint8_t *byte)
     }
 
     *byte = rx_queue[rx_tail];
-    rx_tail = (rx_tail + 1) % TRANSPORT_WIFI_RX_QUEUE_SIZE;
+    rx_tail = (rx_tail + 1) % RX_QUEUE_SIZE;
     return true;
+}
+
+static size_t wifi_space_callback(void *context)
+{
+    (void)context;
+    return (rx_tail + RX_QUEUE_SIZE - rx_head - 1) % RX_QUEUE_SIZE;
 }
 
 static void wifi_receive_callback(void *context, const uint8_t *data, size_t len)
@@ -79,7 +92,7 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
 {
     stdio_init_all();
 
-    absolute_time_t usb_timeout = make_timeout_time_ms(8000);
+    absolute_time_t usb_timeout = make_timeout_time_ms(TRANSPORT_WIFI_USB_WAIT_MS);
     while (!stdio_usb_connected() && !time_reached(usb_timeout)) {
         sleep_ms(10);
     }
@@ -101,6 +114,7 @@ bool transport_init(transport_rx_buffer_t *rx_buffer)
     rx_buffer->ready = false;
 
     wifi_handler.on_receive = wifi_receive_callback;
+    wifi_handler.on_receive_space = wifi_space_callback;
     wifi_handler.on_receive_context = rx_buffer;
 
     bool ok = wifi_handler_init(&wifi_handler);

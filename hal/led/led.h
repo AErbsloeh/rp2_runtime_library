@@ -6,7 +6,7 @@
 
 
 // ============================== INTERNAL FUNCTIONS =========================================
-/*! Function for setting the GPIO pin number of the default LED.
+/*! Function for setting the GPIO pin number of the default LED (the default pin of the board LED is 25 (Pico / Pico 2) if no pin was set).
  * @param led_pin: The GPIO pin number for the LED (if not cyw43 LED is used).
  * @return None
  */
@@ -19,7 +19,7 @@ void set_gpio_default_led(uint8_t led_pin);
 uint8_t get_gpio_default_led(void);
 
 
-/*! Function for initializing the default LED.
+/*! Function for initializing the default LED (Tiny2040: the other LED pins are switched off as well).
  * @return Returns true if initialization was successful, false otherwise.
  */
 bool init_default_led(void);
@@ -32,7 +32,7 @@ bool init_default_led(void);
 bool set_state_default_led(bool state);
 
 
-/*! Function for getting the state of the default LED.
+/*! Function for getting the state of the default LED. The LED of the CYW43 is write-only and the WS2812 cannot be read back, so the last set state is returned for them.
  * @return          The actual state of the LED.
  */
 bool get_state_default_led(void);

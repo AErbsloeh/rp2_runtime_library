@@ -65,6 +65,12 @@ static err_t tcp_recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, 
         return ERR_OK;
     }
 
+    if (client && client->handler && client->handler->on_receive_space) {
+        if (client->handler->on_receive_space(client->handler->on_receive_context) < p->tot_len) {
+            return ERR_MEM;
+        }
+    }
+
     if (client && client->handler && client->handler->on_receive) {
         for (struct pbuf *q = p; q != NULL; q = q->next) {
             client->handler->on_receive(

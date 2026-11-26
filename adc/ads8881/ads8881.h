@@ -19,6 +19,9 @@
 * \param gpio_num_din   GPIO Pin for Data Input (only used in four-wire mode as Chip Select)
 * \param gpio_num_cnv   GPIO Pin for Conversation Start (active high)
 * \param adc_mode       Integer to identify the ADC mode (0: 3-wire with busy indication, 1: 3-wire without busy indication, 2: 4-wire with busy indication, 3: 4-wire without busy indication)
+*                       3-wire: DIN is tied to VDDD, with busy indication DOUT is used with pull-up, without it DOUT is used without pull-up (tri-state)
+*                       4-wire: CS goes to DIN, with busy indication DOUT is used with pull-up, without it DOUT is used without pull-up (tri-state)
+*                       With busy indication the end of the conversion is waited for at most 1 ms
 * \param invert_out     Boolean for inverting the output value
 * \param init_done      Boolean if device configuration is done        
 */
@@ -52,7 +55,7 @@ bool ads8881_init(ads8881_t *handler);
 
 /*! \brief Function for requesting data (on the cheesy way) from Analog-Digital-Converter ADS8881
 * \param handler    Device handler for using device
-* \return           ADC data (includes integer 18-bit values from ADC)
+* \return           ADC data (includes integer 18-bit values from ADC), 0 if the request failed
 */
 uint32_t ads8881_rqst_data(ads8881_t *handler);
 
@@ -61,7 +64,7 @@ uint32_t ads8881_rqst_data(ads8881_t *handler);
 * \param handler    Device handler for using device
 * \param data       Pointer to data array (uint8_t) for receiving data (with length of 18 bits x number of devices(integer), rounded up to byte)
 * \param len        Length of bytes in data array (uint8_t)
-* \return           Number of transferred SPI bytes
+* \return           Number of transferred SPI bytes, negative if the device is not initialised, the mode is invalid or the busy indication timed out
 */
 int ads8881_rqst_data_mode(ads8881_t *handler, uint8_t *data, uint8_t len);
 

@@ -9,6 +9,7 @@
     \param pio          PIO module
     \param pin          GPIO number for CLK generation
     \param freq         Frequency value of generated CLK signal in Hz
+    \return             Boolean if the CLK is running, false if the frequency is 0 or too high for the system clock (half period has to be at least 3 system clock cycles, the PIO program needs 3 cycles more than the passed counter value) or no state machine or program memory is free
 */
 bool clk_generation_pio_init(PIO pio, uint pin, uint freq_hz);
 
