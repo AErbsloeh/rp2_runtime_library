@@ -18,6 +18,7 @@ option(CI_ENABLE_WIFI "Build the WiFi libraries (only for boards with CYW43)" OF
 if(CI_ENABLE_WIFI)
     set(PICO_WIFI_TCP_ENABLED ON CACHE BOOL "" FORCE)
     set(PICO_WIFI_UDP_ENABLED ON CACHE BOOL "" FORCE)
+    set(PICO_BTSTACK_ENABLED ON CACHE BOOL "" FORCE)
 endif()
 
 if(CI_LIBRARY_SOURCE STREQUAL "fetch")
@@ -56,7 +57,7 @@ list(REMOVE_DUPLICATES LIBRARY_TARGETS)
 list(SORT LIBRARY_TARGETS)
 
 if(NOT CI_ENABLE_WIFI)
-    list(FILTER LIBRARY_TARGETS EXCLUDE REGEX "^hal_wifi_|^hal_transport_wifi$|^hal_btspp$")
+    list(FILTER LIBRARY_TARGETS EXCLUDE REGEX "^hal_wifi_|^hal_transport_wifi$|^hal_transport_bt$|^hal_btspp$")
 endif()
 message(STATUS "Library targets: ${LIBRARY_TARGETS}")
 
