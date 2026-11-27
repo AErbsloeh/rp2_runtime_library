@@ -6,10 +6,10 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 
 ## Hardware Abstraction Layer (hal)
-- [x] FIFO buffer (without DMA, `hal/fifo`)
+- [x] FIFO buffer (without DMA)
 - [ ] FIFO sampling buffer (with DMA)
 - [x] DAQ interface with example (data type per stream, thread-safe for core 1)
-- [x] Processing of DAQ data on core 1 (`hal/daq/processing`, results are sent as own DAQ stream)
+- [x] Processing of DAQ data on core 1
 - [x] RP2-ADC interface
 - [x] SPI interface
 - [x] I2C interface
@@ -20,11 +20,11 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 - [x] Timer interrupt
 - [x] Setting of the system clock
 - [x] CRC helper functions
-- [x] Transport layer for USB and WiFi (TCP)
+- [x] Transport layer for USB, WiFi (TCP) and Bluetooth Classic SPP (`hal_transport_usb`, `hal_transport_wifi`, `hal_transport_bt`)
 - [x] LED control
 - [x] Pulse Width Modulation
 - [x] Timer
-- [ ] Bluetooth Stack
+- [x] Bluetooth Classic SPP for Pico (2) W and Raspberry Pi Radio Module 2
 - [x] Wifi with different data packets like UDP
 - [x] LED control of WS2812b (using PIO)
 - [x] Clock Generator with GPIO output (using PIO)
