@@ -7,6 +7,7 @@ target_sources(hal_fifo INTERFACE
 
 target_link_libraries(hal_fifo INTERFACE
     pico_stdlib
+    hardware_dma
 )
 
 target_include_directories(hal_fifo INTERFACE

@@ -6,8 +6,8 @@ Enjoy. If you have questions and suggestions, please create an issue or contact 
 
 
 ## Hardware Abstraction Layer (hal)
-- [x] FIFO buffer (without DMA)
-- [ ] FIFO sampling buffer (with DMA)
+- [x] FIFO buffer (`hal/fifo`, queue)
+- [x] FIFO sampling buffer (with DMA, `use_dma` in `fifo_t`)
 - [x] DAQ interface with example (data type per stream, thread-safe for core 1)
 - [x] Processing of DAQ data on core 1
 - [x] RP2-ADC interface
