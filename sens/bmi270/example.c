@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
+#include "pico/stdio_usb.h"
 
 #include "sens/bmi270/bmi270_i2c.h"
 
@@ -41,7 +43,7 @@ int main(){
     sleep_ms(100);    
 
     //Main Loop for communication
-    bmi270_data_t data = BMI270_DATA_DEFAULT;
+    bmi270_double_t data = BMI270_DOUBLE_DEFAULT;
     while (true){
         printf("Error: %x\n", BMI270_i2c_get_error_register(&sens_device));
         printf("Status: %x\n", BMI270_i2c_get_status_register(&sens_device));

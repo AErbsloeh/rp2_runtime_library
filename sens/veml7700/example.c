@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
+#include "pico/stdio_usb.h"
+#include "hal/led/led.h"
 
 #include "sens/veml7700/veml7700.h"
 
@@ -23,16 +26,17 @@ int main(){
     };
 
     // Init of device
-    scan_i2c_bus_for_device(&I2C_USED);
+    init_default_led();
+    scan_i2c_bus_for_device(veml_test.i2c_mod);
     if(VEML7700_init(&veml_test)){
-        gpio_put(PICO_DEFAULT_LED_PIN, true);
+        set_state_default_led(true);
     };
     VEML7700_read_id(&veml_test, true);
     sleep_ms(100);    
 
     //Main Loop for communication
-    uint16_t als = 0.0;
-    uint16_t whs = 0.0;
+    uint16_t als = 0;
+    uint16_t whs = 0;
 
     while (true){
         als = VEML7700_get_als_value(&veml_test);

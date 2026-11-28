@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
 
 #include "poti/ad528x/ad528x.h"
 
 
 int main(){ 
+    stdio_init_all();
+
     static ad528x_t setting_device = {
         .i2c_handler = &DEVICE_I2C_DEFAULT,
         .mode_sel = 0,
@@ -16,7 +19,7 @@ int main(){
 
     // Init of device
     if(ad528x_init(&setting_device)) 
-        prinft("Init of MUX ADG1408 done\n");
+        printf("Init of DigPot AD528x done\n");
 
 
     //Main Loop for communication

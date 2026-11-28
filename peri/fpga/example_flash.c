@@ -3,8 +3,8 @@
 #include "hal/led/led.h"
 #include "hal/spi/spi.h"
 #include "peri/fpga/flash.h"
-#include "peri/fpga/fpga_spi.h"
-#include "peri/fpga/fpga_config.h"
+#include "peri/fpga/logic.h"
+#include "peri/fpga/fpga_spi_shared.h"
 
 
 #define FPGA_EN_POWER_GPIO  23
@@ -24,7 +24,7 @@ int main(){
         .msb_first = true,
         .init_done = false
     };
-    flash_fpga_t flash_env5 = {
+    fpga_flash_t flash_env5 = {
         .spi = &spi_flash_env5,
         .gpio_csn = 1,
         .gpio_progb = 12,
@@ -35,6 +35,21 @@ int main(){
         .use_32bit = false,
         .page_size = 256,
         .block_size = 4096 * 8,
+    };
+    fpga_logic_t fpga_env5 = {
+        .spi = &spi_flash_env5,
+        .number_bytes = 3,
+        .gpio_csn = 5,
+        .gpio_rstn = 6,
+        .gpio_rdy = 7,
+        .init_done = false
+    };
+    fpga_spi_shared_t fpga_bus = {
+        .flash = &flash_env5,
+        .logic = &fpga_env5,
+        .fspi_khz_flash = 48000,
+        .fspi_khz_logic = 1000,
+        .attached = false
     };
 
      // Pin Init for FPGA Power Enable
@@ -51,7 +66,7 @@ int main(){
     if(fpga_program_init(&flash_env5))
         num_init++;
 
-    if(fpga_spi_init(&fpga_env5))
+    if(fpga_logic_init(&fpga_env5))
         num_init++;
 
     if(num_init == 2)
@@ -93,10 +108,10 @@ int main(){
     /* --- Reading flash content --- */
     uint8_t data_rx[256];
     flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
-    printf("\nRead flash content (%d bytes) before change:\n", sizeof(data_rx));
+    printf("\nRead flash content (%u bytes) before change:\n", (unsigned)sizeof(data_rx));
     for(uint16_t idx=0; idx < 256; idx++){
         printf("%02x ", data_rx[idx]); 
-        if(idx % 16 == 0 && idx > 0)
+        if((idx + 1) % 16 == 0)
             printf("\n");
     }    
 
@@ -104,7 +119,7 @@ int main(){
     data_rx[0] = 0xff;
     data_rx[1] = 0x04;
     data_rx[2] = 0xff;
-    printf("\nWrite flash content (%d bytes) before change:\n", sizeof(data_rx));
+    printf("\nWrite flash content (%u bytes):\n", (unsigned)sizeof(data_rx));
     bool written_state = flash_write_data(&flash_env5, 0, data_rx, sizeof(data_rx));
     sleep_ms(1);
     printf("Written state: %02x\n", written_state);
@@ -112,15 +127,15 @@ int main(){
 
     /* --- Reading flash content --- */
     flash_read_data(&flash_env5, 0, data_rx, sizeof(data_rx));
-    printf("\nRead flash content (%d bytes) after change:\n", sizeof(data_rx));
+    printf("\nRead flash content (%u bytes) after change:\n", (unsigned)sizeof(data_rx));
     for(uint16_t idx=0; idx < 256; idx++){
         printf("%02x ", data_rx[idx]); 
-        if(idx % 16 == 0 && idx > 0)
+        if((idx + 1) % 16 == 0)
             printf("\n");
     }     
     
     /* --- Enable power to FPGA --- */
-    printf("\nEnablng FPGA power!\n");
+    printf("\nEnabling FPGA power!\n");
     gpio_put(FPGA_EN_POWER_GPIO, true);
     sleep_ms(1000);    
 
@@ -130,13 +145,13 @@ int main(){
     uint16_t cnt = 0;
     bool state = false;
 
-    fpga_spi_reset_do(&fpga_env5, state);
+    fpga_logic_reset_do(&fpga_env5, state);
     set_state_default_led(true);
     while (true) {  
         toggle_state_default_led();
         sleep_ms(1000);
 
-        /*fpga_spi_send_data(&fpga_env5, data_toggle_led, data_rx0);    
+        /*fpga_spi_shared_transfer(&fpga_bus, data_toggle_led, data_rx0);    
         state = !state;
         cnt++;
         if(cnt >= 200){

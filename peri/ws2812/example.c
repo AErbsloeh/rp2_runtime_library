@@ -2,7 +2,7 @@
 
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
-#include "peri/pio_ws2812/ws2812.pio.h"
+#include "peri/ws2812/ws2812.h"
 
 
 #define NEOPIXEL_PIN 17
@@ -12,16 +12,16 @@ int main(){
     // Init Phase 
     // Controlling a NeoPixel LED (only on KB2040)
     PIO pio_mod1 = pio1;
-    ws2812_init(pio_mod1, NEOPIXEL_PIN, 800000);
+    ws2812_init(pio_mod1, NEOPIXEL_PIN);
     
 	put_pixel_rgb(0, 0, 0);
     sleep_ms(100);
     
 
     //Main Loop for communication
-	uint_8t red_val = 0;
-	uint_8t gre_val = 0;
-	uint_8t blu_val = 0;
+	uint8_t red_val = 0;
+	uint8_t gre_val = 0;
+	uint8_t blu_val = 0;
     while (true){
         put_pixel_rgb(red_val, gre_val, blu_val);
 		sleep_ms(1000);
