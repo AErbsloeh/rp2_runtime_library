@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
 
 #include "poti/ad526x/ad526x.h"
 
 
 int main(){ 
+    stdio_init_all();
+
     static ad526x_t setting_device = {
         .spi_handler = &DEVICE_SPI_DEFAULT,
         .gpio_cs = PICO_DEFAULT_SPI_CSN_PIN,
@@ -15,7 +18,7 @@ int main(){
 
     // Init of device
     if(ad526x_init(&setting_device)) 
-        prinft("Init of DigPot AD526x done\n");
+        printf("Init of DigPot AD526x done\n");
 
     //Main Loop for communication
     uint8_t position = 0;

@@ -77,6 +77,6 @@ int main(){
 
     // Main Loop
     while (true) {  
-        tight_content_loop();
+        tight_loop_contents();
     }
 }

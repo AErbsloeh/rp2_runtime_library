@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
+#include "pico/stdio_usb.h"
 
-#include "sens/vl6180.h"
+#include "sens/vl6180/vl6180.h"
 
 
 int main(){ 
-    static i2c_device_handler_t I2C_USED = {
+    static i2c_rp2_t I2C_USED = {
         .pin_sda = 14,
         .pin_scl = 15,
         .i2c_mod = i2c1,

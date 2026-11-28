@@ -1,5 +1,6 @@
-#include "peri/w5500/w5500_udp.h"
 #include <stdio.h>
+#include "pico/stdlib.h"
+#include "peri/w5500/w5500_udp.h"
 
 
 int main(){   
@@ -29,7 +30,7 @@ int main(){
     };
 
     w5500_udp_init(&w5500_config);
-    print_network_information(g_net_info); // Read back the configuration information and print it
+    w5500_udp_print_info(&w5500_config); // Read back the configuration information and print it
 
     // Main Loop
     while (true) {  

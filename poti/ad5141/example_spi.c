@@ -1,16 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include "pico/stdlib.h"
+
+#include "poti/ad5141/ad5141_spi.h"
 
 
-#include "poti/ad5141_spi/ad5141_spi.h"
-
-
-int main(){ 
-    ad5141_spi_rp2_t setting_device = {
+int main(){
+    static ad5141_spi_rp2_t setting_device = {
         .spi_handler = &DEVICE_SPI_DEFAULT,
-        .device_csn = PICO_DEFAULT_SPI_CSN_PIN,
-        .init_done
-    }
+        .gpio_csn = PICO_DEFAULT_SPI_CSN_PIN,
+        .init_done = false
+    };
 
     // Init of device
     ad5141_spi_init(&setting_device);

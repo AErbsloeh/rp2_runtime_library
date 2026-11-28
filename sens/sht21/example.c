@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pico/stdlib.h"
+#include "pico/stdio_usb.h"
 
 #include "sens/sht21/sht21.h"
 
